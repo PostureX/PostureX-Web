@@ -1,0 +1,38 @@
+.slider-box {
+    padding: 1rem;
+    background-color: #F2F2F2;
+    border: none;
+    font-size: 28px;
+    color: #535353;
+    border-radius: 8px;
+    min-width: 450px;
+    max-width: 650px;
+    padding: 4px;
+}
+
+.slider-box button{
+    margin: 0;
+    width: 100%;
+    text-align: center;
+    padding: 0.5rem 1rem;
+    background-color: none;
+    border: none;
+    border-radius: 8px;
+    transition: background-color 0.2s;
+}
+
+.slider-box-active{
+    background-color: #00205B;
+    color: #FFF;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.slider-box-deactive{
+    background-color: #F2F2F2;
+    color: #535353;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.slider-box button:not(.slider-box-active):hover {
+    background-color: #EAEAEB;
+}
