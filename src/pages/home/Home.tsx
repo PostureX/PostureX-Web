@@ -1,11 +1,9 @@
-import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import Header from "../components_gy/Header"
-import Slider from "../components_gy/slider"
-import UploadCard from "../components_gy/upload_card"
-import PostureInsightsCarousel from "../components_gy/PostureInsightsCarousel"
-import "./HomePage.css";
+import Header from "@/components/header/Header"
+import Slider from "@/components/ui/slider"
+import UploadCard from "@/components/ui/upload_card"
+import PostureInsightsCarousel from "@/components/ui/PostureInsightsCarousel"
+import "./Home.css";
 
 export default function HomePage() {
 
