@@ -1,9 +1,40 @@
+import MainLayout from "@/components/custom/MainLayout/MainLayout";
 import HomePage from "@/pages/home/Home";
-import { createBrowserRouter } from "react-router";
+import { createBrowserRouter, Outlet } from "react-router";
+import Landing from "@/pages/landing/Landing";
+import ProtectedRoute from "./ProtectedRoute";
+import { AuthProvider } from "@/hooks/Auth";
+import { AnalysisProvider } from "@/hooks/Analysis";
+import Analysis from "@/pages/analysis/Analysis";
 
 export const router = createBrowserRouter([
   {
-    path: "/",
-    Component: HomePage,
+    element: <AuthProvider><Outlet /></AuthProvider>,
+    children: [
+      {
+        path: "/",
+        Component: Landing,
+      },
+      {
+        element: <ProtectedRoute />,
+        children: [
+          {
+            Component: MainLayout,
+            children: [
+              {
+                path: "/dashboard",
+                Component: HomePage,
+                id: "dashboard",
+              },
+              {
+                path: "/analysis",
+                element: <AnalysisProvider><Analysis /></AnalysisProvider>,
+                id: "analysis",
+              },
+            ],
+          },
+        ],
+      },
+    ]
   },
 ]);
