@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import InsightsCard from "./insights_card";
+import InsightsCard from "./InsightsCard/InsightsCard";
 
 interface Insight {
   severity_level: number;

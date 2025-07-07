@@ -1,9 +1,9 @@
-import "./insights_card.css";
+import "./InsightsCard.css";
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 
 export default function InsightsCard(props: {severity_level: number, message: string, percentageChange: number, improvement: boolean}) {
-    const severityMessage: String[] = ["Critical Issue", "Warning", "Good"]
+    const severityMessage: string[] = ["Critical Issue", "Warning", "Good"]
 
     const getBadgeColour = (severity: number) => {
         switch (severity) {
