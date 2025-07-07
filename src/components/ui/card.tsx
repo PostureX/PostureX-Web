@@ -4,12 +4,18 @@ import { cn } from "@/lib/utils"
 import { cva } from "class-variance-authority"
 
 const cardVariants = cva(
-  "bg-card text-card-foreground flex flex-col gap-6 rounded-xl py-6 shadow-sm hover:shadow-lg transition-shadow overflow-hidden group hover:[background:var(--gradient-hover)]",
+  "bg-card text-card-foreground flex flex-col gap-6 rounded-xl py-6 shadow-sm transition-shadow overflow-hidden group",
   {
     variants: {
       variant: {
-        default: " border-0 border-t-1 border-t-(--highlight)",
+        default: "hover:shadow-lg hover:[background:var(--gradient-hover)] border-0 border-t border-t-[--highlight]",
         noHighlight: "border-0 border-t-0",
+        glass:
+          // No hover effects for glass except border highlight
+          "bg-white/30 backdrop-blur-[2px] rounded-[20px] border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.5),inset_0_-1px_0_rgba(255,255,255,0.1),inset_0_0_30px_15px_rgba(255,255,255,1.5)] relative overflow-hidden " +
+          "hover:border-white/60 " +
+          "before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent " +
+          "after:content-[''] after:absolute after:top-0 after:left-0 after:w-px after:h-full after:bg-gradient-to-b after:from-white/80 after:via-transparent after:to-white/30",
       },
     },
     defaultVariants: {
@@ -18,7 +24,7 @@ const cardVariants = cva(
   }
 )
 
-function Card({ className, ...props }: React.ComponentProps<"div"> & { variant?: "default" | "noHighlight" }) {
+function Card({ className, ...props }: React.ComponentProps<"div"> & { variant?: "default" | "noHighlight" | "glass" }) {
   return (
     <div
       data-slot="card"

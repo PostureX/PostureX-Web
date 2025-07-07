@@ -14,6 +14,7 @@ import {
   ArrowRight,
   Zap,
 } from "lucide-react"
+import AnimatedNetworkBackground from "./AnimatedBackground"
 
 interface LandingContentProps {
   onGetStarted: () => void
@@ -130,7 +131,8 @@ export default function LandingContent({ onGetStarted }: LandingContentProps) {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 py-20">
+      <section className="relative overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 py-20">
+        <AnimatedNetworkBackground />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
@@ -174,7 +176,7 @@ export default function LandingContent({ onGetStarted }: LandingContentProps) {
                 </div>
               </div>
             </div>
-            <Card className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-8">
+            <Card variant="glass" className="relative rounded-2xl shadow-2xl p-8">
               <CardContent className="p-0">
                 <div className="bg-gray-900 dark:bg-gray-800 rounded-lg aspect-video flex items-center justify-center mb-6">
                   <div className="text-center text-gray-400">
