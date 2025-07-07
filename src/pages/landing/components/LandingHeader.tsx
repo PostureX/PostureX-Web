@@ -47,8 +47,10 @@ export default function LandingHeader({ onLogin, onSignup }: LandingHeaderProps)
             <Button onClick={onSignup}>Get Started</Button>
           </div>
 
-          {/* Theme Toggle Button */}
-          <ThemeToggle />
+          {/* Theme Toggle Button (desktop only) */}
+          <div className="hidden md:flex">
+            <ThemeToggle />
+          </div>
 
           {/* Mobile menu button */}
           <div className="md:hidden">
@@ -81,6 +83,8 @@ export default function LandingHeader({ onLogin, onSignup }: LandingHeaderProps)
                 <Button onClick={onSignup} className="justify-start">
                   Get Started
                 </Button>
+                {/* Theme Toggle Button (mobile only) */}
+                <ThemeToggle />
               </div>
             </div>
           </div>
