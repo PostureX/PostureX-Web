@@ -176,7 +176,7 @@ export default function LandingContent({ onGetStarted }: LandingContentProps) {
                 </div>
               </div>
             </div>
-            <Card variant="glass" className="relative rounded-2xl shadow-2xl p-8">
+            <Card variant="glassWithHoverEffect" className="relative rounded-2xl shadow-2xl p-8">
               <CardContent className="p-0">
                 <div className="bg-gray-900 dark:bg-gray-800 rounded-lg aspect-video flex items-center justify-center mb-6">
                   <div className="text-center text-gray-400">

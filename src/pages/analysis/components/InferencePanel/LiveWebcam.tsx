@@ -31,7 +31,6 @@ export default function LiveWebcam() {
         if (isCameraOn) {
             getWebcam();
         } else {
-            // If camera is turned off, clear the video stream
             if (videoElement) {
                 videoElement.srcObject = null;
             }
@@ -57,15 +56,19 @@ export default function LiveWebcam() {
             />
             {/* Overlay for fallback or instructions if needed */}
             {cameraError ? (
-                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                    <CameraOff className="w-16 h-16 mx-auto mb-4 opacity-50 text-red-400" />
-                    <p className="text-lg text-red-400 font-semibold">No camera found</p>
-                    <p className="text-sm mt-2 text-gray-400">Please connect a camera and refresh the page.</p>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <div className="relative z-10 flex flex-col items-center pointer-events-none">
+                        <CameraOff className="w-16 h-16 mx-auto mb-4 opacity-50 text-red-400" />
+                        <p className="text-lg text-red-400 font-semibold">No camera found</p>
+                        <p className="text-sm mt-2 text-gray-400">Please connect a camera and refresh the page.</p>
+                    </div>
                 </div>
             ) : !isAnalyzing && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                    <Target className="w-16 h-16 mx-auto mb-4 opacity-50 text-gray-400" />
-                    <p className="text-sm mt-2 text-gray-400">Click "Start Analysis" to begin</p>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <div className="relative z-10 flex flex-col items-center pointer-events-none">
+                        <Target className="w-16 h-16 mx-auto mb-4 opacity-50 text-gray-400" />
+                        <p className="text-sm mt-2 text-gray-400">Click "Start Analysis" to begin</p>
+                    </div>
                 </div>
             )}
         </div>
