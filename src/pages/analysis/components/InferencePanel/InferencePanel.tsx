@@ -24,6 +24,7 @@ export default function InferencePanel() {
         cameraDevices,
         cameraIndex,
         setCameraIndex,
+        fetchDevices,
     } = analysis;
 
     const handleVideoPlay = () => {
@@ -116,7 +117,18 @@ export default function InferencePanel() {
                                 variant={isCameraOn ? "default" : "outline"}
                                 size="sm"
                                 className="flex items-center gap-1"
-                                onClick={() => setIsCameraOn(!isCameraOn)}
+                                onClick={async () => {
+                                    if (!isCameraOn) {
+                                        // Request permission and update device list
+                                        try {
+                                            await navigator.mediaDevices.getUserMedia({ video: true });
+                                        } catch (e) {
+                                            // handle error if needed
+                                        }
+                                        await fetchDevices();
+                                    }
+                                    setIsCameraOn(!isCameraOn);
+                                }}
                             >
                                 {isCameraOn ? <Camera className="w-4 h-4" /> : <CameraOff className="w-4 h-4" />}
                             </Button>
@@ -124,7 +136,10 @@ export default function InferencePanel() {
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => setCameraIndex((cameraIndex + 1) % cameraDevices.length)}
+                                    onClick={async () => {
+                                        setCameraIndex((cameraIndex + 1) % cameraDevices.length);
+                                        await fetchDevices(); // Optionally refresh device list after switching
+                                    }}
                                     title="Switch Camera"
                                 >
                                     <SwitchCamera className="w-4 h-4" />

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode, useEffect } from "react"
+import { createContext, useContext, useState, ReactNode } from "react"
 
 type AnalysisMode = "live" | "upload"
 
@@ -42,6 +42,7 @@ interface AnalysisContextType {
     keypoints: Keypoint[]
     setKeypoints: (v: Keypoint[]) => void
     cameraDevices: MediaDeviceInfo[]
+    fetchDevices: () => Promise<void>
 }
 
 const AnalysisContext = createContext<AnalysisContextType | undefined>(undefined)
@@ -78,13 +79,10 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
         { id: 7, name: "Right Wrist", x: 420, y: 260, confidence: 0.93 },
     ])
 
-    useEffect(() => {
-        async function fetchDevices() {
-            const devices = await navigator.mediaDevices.enumerateDevices();
-            setCameraDevices(devices.filter(d => d.kind === "videoinput"));
-        }
-        fetchDevices();
-    }, []);
+    const fetchDevices = async () => {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        setCameraDevices(devices.filter(d => d.kind === "videoinput"));
+    }
 
     return (
         <AnalysisContext.Provider
@@ -101,7 +99,8 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
                 videoDuration, setVideoDuration,
                 postureMetrics, setPostureMetrics,
                 keypoints, setKeypoints,
-                cameraDevices
+                cameraDevices,
+                fetchDevices
             }}
         >
             {children}

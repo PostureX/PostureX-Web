@@ -4,45 +4,72 @@ import { useAnalysis } from "@/hooks/Analysis";
 
 export default function LiveWebcam() {
     const videoRef = useRef<HTMLVideoElement>(null);
+    const streamRef = useRef<MediaStream | null>(null);
+    const cleanupPromiseRef = useRef<Promise<void>>(Promise.resolve());
     const { isAnalyzing, isCameraOn, cameraDevices, cameraIndex } = useAnalysis();
     const [cameraError, setCameraError] = useState(false);
 
     useEffect(() => {
-        let stream: MediaStream | null = null;
+        let isMounted = true;
         const videoElement = videoRef.current;
 
+        // Helper to stop and clean up the current stream
+        async function cleanupStream() {
+            if (videoElement) {
+                videoElement.srcObject = null;
+            }
+            if (streamRef.current) {
+                streamRef.current.getTracks().forEach(track => track.stop());
+                streamRef.current = null;
+            }
+            // Wait a tick to ensure hardware is released
+            await new Promise(res => setTimeout(res, 100));
+        }
+
         async function getWebcam() {
+            // Chain cleanup to avoid overlap
+            cleanupPromiseRef.current = cleanupPromiseRef.current.then(cleanupStream);
+            await cleanupPromiseRef.current;
+
+            if (!isMounted) return;
+
             try {
-                const constraints: MediaStreamConstraints = {
-                    video: cameraDevices.length
-                        ? { deviceId: { exact: cameraDevices[cameraIndex]?.deviceId } }
-                        : true,
-                };
-                stream = await navigator.mediaDevices.getUserMedia(constraints);
+                let constraints: MediaStreamConstraints = {};
+
+                if (cameraDevices.length > 0) {
+                    const device = cameraDevices[cameraIndex];
+                    constraints = {
+                        video: {
+                            deviceId: { exact: device.deviceId },
+                        },
+                    };
+                } else {
+                    constraints = { video: true };
+                }
+
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                streamRef.current = stream;
+
                 if (videoElement) {
                     videoElement.srcObject = stream;
                 }
                 setCameraError(false);
-            } catch {
+            } catch (error) {
+                console.error("Error accessing webcam:", error);
                 setCameraError(true);
+                await cleanupStream();
             }
         }
 
         if (isCameraOn) {
             getWebcam();
         } else {
-            if (videoElement) {
-                videoElement.srcObject = null;
-            }
+            cleanupPromiseRef.current = cleanupPromiseRef.current.then(cleanupStream);
         }
 
         return () => {
-            if (stream) {
-                stream.getTracks().forEach(track => track.stop());
-            }
-            if (videoElement) {
-                videoElement.srcObject = null;
-            }
+            isMounted = false;
+            cleanupPromiseRef.current = cleanupPromiseRef.current.then(cleanupStream);
         };
     }, [isCameraOn, cameraDevices, cameraIndex]);
 
