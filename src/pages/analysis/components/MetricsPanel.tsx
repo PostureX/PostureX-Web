@@ -34,7 +34,7 @@ const getStatusColor = (status: string) => {
     }
   }
 
-export default function AnalysisPanel() {
+export default function MetricsPanel() {
     const { currentScore, postureMetrics } = useAnalysis();
 
     return <div className="space-y-6">

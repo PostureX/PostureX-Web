@@ -5,10 +5,10 @@ import {
   Activity,
   Camera,
 } from "lucide-react"
-import AnalysisPanel from "./components/AnalysisPanel"
 import { useAnalysis } from "@/hooks/Analysis"
 import AdditionalInfoPanel from "./components/AditionalInfoPanel"
 import InferencePanel from "./components/InferencePanel/InferencePanel"
+import MetricsPanel from "./components/MetricsPanel"
 
 export default function Analysis() {
   const { analysisMode } = useAnalysis();
@@ -46,8 +46,8 @@ export default function Analysis() {
           {/* Video Feed */}
           <InferencePanel />
 
-          {/* Analysis Panel */}
-          <AnalysisPanel />
+          {/* Metrics Panel */}
+          <MetricsPanel />
         </div>
 
         {/* Additional Information */}
