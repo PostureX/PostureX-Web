@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode } from "react"
+import { createContext, useContext, useState, ReactNode, useEffect } from "react"
 
 type AnalysisMode = "live" | "upload"
 
@@ -83,6 +83,13 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
         const devices = await navigator.mediaDevices.enumerateDevices();
         setCameraDevices(devices.filter(d => d.kind === "videoinput"));
     }
+
+    useEffect(() => {
+        if (!isCameraOn) {
+            setIsAnalyzing(false);
+            setVideoUrl(null);
+        }
+    }, [isCameraOn]);
 
     return (
         <AnalysisContext.Provider
