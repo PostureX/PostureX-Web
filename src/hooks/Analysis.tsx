@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode } from "react"
+import { createContext, useContext, useState, ReactNode, useEffect } from "react"
 
 type AnalysisMode = "live" | "upload"
 
@@ -23,6 +23,10 @@ interface AnalysisContextType {
     setCurrentScore: (v: number) => void
     analysisMode: AnalysisMode
     setAnalysisMode: (v: AnalysisMode) => void
+    isCameraOn: boolean
+    setCameraIndex: (v: number) => void
+    cameraIndex: number
+    setIsCameraOn: (v: boolean) => void
     uploadedVideo: File | null
     setUploadedVideo: (v: File | null) => void
     videoUrl: string | null
@@ -37,6 +41,7 @@ interface AnalysisContextType {
     setPostureMetrics: (v: PostureMetric[]) => void
     keypoints: Keypoint[]
     setKeypoints: (v: Keypoint[]) => void
+    cameraDevices: MediaDeviceInfo[]
 }
 
 const AnalysisContext = createContext<AnalysisContextType | undefined>(undefined)
@@ -45,6 +50,9 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
     const [isAnalyzing, setIsAnalyzing] = useState(false)
     const [currentScore, setCurrentScore] = useState(85)
     const [analysisMode, setAnalysisMode] = useState<AnalysisMode>("live")
+    const [isCameraOn, setIsCameraOn] = useState(false)
+    const [cameraDevices, setCameraDevices] = useState<MediaDeviceInfo[]>([]);
+    const [cameraIndex, setCameraIndex] = useState(0);
     const [uploadedVideo, setUploadedVideo] = useState<File | null>(null)
     const [videoUrl, setVideoUrl] = useState<string | null>(null)
     const [isVideoPlaying, setIsVideoPlaying] = useState(false)
@@ -70,12 +78,22 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
         { id: 7, name: "Right Wrist", x: 420, y: 260, confidence: 0.93 },
     ])
 
+    useEffect(() => {
+        async function fetchDevices() {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            setCameraDevices(devices.filter(d => d.kind === "videoinput"));
+        }
+        fetchDevices();
+    }, []);
+
     return (
         <AnalysisContext.Provider
             value={{
                 isAnalyzing, setIsAnalyzing,
                 currentScore, setCurrentScore,
                 analysisMode, setAnalysisMode,
+                isCameraOn, setIsCameraOn,
+                cameraIndex, setCameraIndex,
                 uploadedVideo, setUploadedVideo,
                 videoUrl, setVideoUrl,
                 isVideoPlaying, setIsVideoPlaying,
@@ -83,6 +101,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
                 videoDuration, setVideoDuration,
                 postureMetrics, setPostureMetrics,
                 keypoints, setKeypoints,
+                cameraDevices
             }}
         >
             {children}

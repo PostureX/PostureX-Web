@@ -1,11 +1,11 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { useAnalysis } from "@/hooks/Analysis"
-import { Target, Camera, Square, Play } from "lucide-react"
+import { Target, Camera, Square, Play, CameraOff, SwitchCamera } from "lucide-react"
 import AnalysisOverlay from "./AnalysisOverlay"
 import LiveWebcam from "./LiveWebcam"
 import VideoUpload from "./VideoUpload"
-
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function InferencePanel() {
     const analysis = useAnalysis();
@@ -19,6 +19,11 @@ export default function InferencePanel() {
         setIsAnalyzing,
         isAnalyzing,
         setIsVideoPlaying,
+        isCameraOn,
+        setIsCameraOn,
+        cameraDevices,
+        cameraIndex,
+        setCameraIndex,
     } = analysis;
 
     const handleVideoPlay = () => {
@@ -82,42 +87,61 @@ export default function InferencePanel() {
             </CardHeader>
             <CardContent>
                 {/* Mode Selection */}
-                <div className="mb-4">
-                    <div className="flex items-center gap-4 p-1 bg-secondary rounded-lg w-fit">
-                        <button
-                            onClick={() => {
-                                setAnalysisMode("live")
-                                setIsAnalyzing(false)
+                <div className="mb-4 flex items-center justify-between">
+                    <div className="w-fit">
+                        <Tabs value={analysisMode} onValueChange={(val) => {
+                            setAnalysisMode(val as "live" | "upload")
+                            setIsAnalyzing(false)
+                            if (val === "live") {
                                 setUploadedVideo(null)
                                 setVideoUrl(null)
-                            }}
-                            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors hover:cursor-pointer ${analysisMode === "live"
-                                ? "bg-primary text-primary-foreground shadow-sm"
-                                : "text-muted-foreground hover:text-primary-foreground"
-                                }`}
-                        >
-                            <Target className="w-4 h-4 mr-2 inline" />
-                            Live Camera
-                        </button>
-                        <button
-                            onClick={() => {
-                                setAnalysisMode("upload")
-                                setIsAnalyzing(false)
-                            }}
-                            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors hover:cursor-pointer ${analysisMode === "upload"
-                                ? "bg-primary text-primary-foreground shadow-sm"
-                                : "text-muted-foreground hover:text-primary-foreground"
-                                }`}
-                        >
-                            <Camera className="w-4 h-4 mr-2 inline" />
-                            Upload Video
-                        </button>
+                            }
+                        }}>
+                            <TabsList className="bg-secondary rounded-lg p-1">
+                                <TabsTrigger value="live" className="flex items-center gap-2">
+                                    <Target className="w-4 h-4" />
+                                    Live Camera
+                                </TabsTrigger>
+                                <TabsTrigger value="upload" className="flex items-center gap-2">
+                                    <Camera className="w-4 h-4" />
+                                    Upload Video
+                                </TabsTrigger>
+                            </TabsList>
+                        </Tabs>
                     </div>
+                    {/* Webcacm Settings */}
+                    {analysisMode === "live" && (
+                        <div className="flex items-center ml-4 gap-2">
+                            <Button
+                                variant={isCameraOn ? "default" : "outline"}
+                                size="sm"
+                                className="flex items-center gap-1"
+                                onClick={() => setIsCameraOn(!isCameraOn)}
+                            >
+                                {isCameraOn ? <Camera className="w-4 h-4" /> : <CameraOff className="w-4 h-4" />}
+                            </Button>
+                            {cameraDevices.length > 1 && (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setCameraIndex((cameraIndex + 1) % cameraDevices.length)}
+                                    title="Switch Camera"
+                                >
+                                    <SwitchCamera className="w-4 h-4" />
+                                </Button>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 <div className="relative bg-gray-900 rounded-lg overflow-hidden" style={{ aspectRatio: "16/9" }}>
                     {analysisMode === "live" ? (
-                        <LiveWebcam />
+                        isCameraOn ? <LiveWebcam /> : (
+                            <div className="absolute inset-0 flex items-center justify-center text-gray-400 bg-gradient-to-br from-gray-800 to-gray-900">
+                                <CameraOff className="w-16 h-16 mb-4 opacity-50" />
+                                <span className="ml-4 text-lg">Camera is Off</span>
+                            </div>
+                        )
                     ) : (
                         <VideoUpload />
                     )}
