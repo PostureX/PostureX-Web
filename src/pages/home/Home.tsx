@@ -1,115 +1,247 @@
+import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card"
-import UploadCard from "@/components/custom/UploadCard/UploadCard"
+import { Button } from "@/components/ui/button"
+import { Calendar } from "@/components/ui/calendar"
 import PostureInsightsCarousel from "@/components/custom/PostureInsightsCarousel"
+import UploadCard from "@/components/custom/UploadCard/UploadCard"
 import "./Home.css";
 import Slider from "@/components/custom/Slider/Slider";
+import { CalendarDays, ChevronDown, Plus, Moon, Sun, X } from "lucide-react";
+import { DateRange } from "react-day-picker";
+import { useTheme } from "@/hooks/Theme";
+
+type UploadData = {
+  created_at: string;
+  id: number;
+  text: string;
+  user_id: number;
+  video_url: string;
+};
 
 export default function HomePage() {
+  const [theme, setTheme] = useTheme();
 
-  // Sample insights data
-  const insights = [
+  // Transform insights data to new format
+  const insights: Array<{
+    type: "critical" | "warning" | "good" | "info";
+    title: string;
+    content: string;
+    change: string;
+  }> = [
     {
-      severity_level: 0,
-      message: "Your feet are not shoulder width apart. They are 20cm smaller than your shoulder width.",
-      percentageChange: 15,
-      improvement: false
+      type: "critical",
+      title: "Critical Issue",
+      content: "Your feet are not shoulder width apart. They are 20cm smaller than your shoulder width.",
+      change: "15% worse than previous",
     },
     {
-      severity_level: 1,
-      message: "Your back is slightly hunched. Your back is slightly hunched. Your back is slightly hunched. Your back is slightly hunched. Your back is slightly hunched. Your back is slightly hunched andf abaias ajosinffak ajksdjklj.",
-      percentageChange: 10,
-      improvement: false
+      type: "warning",
+      title: "Posture Alert",
+      content: "Your back is slightly hunched. Your back is slightly hunched. Your back is slightly hunched. Your back is slightly hunched. Your back is slightly hunched. Your back is slightly hunched andf abaias ajosinffak ajksdjklj.",
+      change: "10% worse than previous",
     },
     {
-      severity_level: 2,
-      message: "You are sitting for too long.",
-      percentageChange: 5,
-      improvement: true
+      type: "good",
+      title: "Good Progress",
+      content: "You are sitting for too long.",
+      change: "5% better than previous",
     },
     {
-      severity_level: 2,
-      message: "You are sitting for too long.",
-      percentageChange: 5,
-      improvement: true
+      type: "good",
+      title: "Good Progress",
+      content: "You are sitting for too long.",
+      change: "5% better than previous",
     },
     {
-      severity_level: 2,
-      message: "You are sitting for too long.",
-      percentageChange: 5,
-      improvement: true
+      type: "good",
+      title: "Good Progress",
+      content: "You are sitting for too long.",
+      change: "5% better than previous",
     },
     {
-      severity_level: 2,
-      message: "You are sitting for too long.",
-      percentageChange: 5,
-      improvement: true
-    },
-    {
-      severity_level: 2,
-      message: "You are sitting for too long.",
-      percentageChange: 5,
-      improvement: true
-    },
-    {
-      severity_level: 2,
-      message: "You are sitting for too long.",
-      percentageChange: 5,
-      improvement: true
+      type: "good",
+      title: "Good Progress",
+      content: "You are sitting for too long.",
+      change: "5% better than previous",
     },
   ];
 
-  // Uncomment below to fetch data from API
-  // const [uploadData, setUploadData] = useState(null);
-  // const [insightsData, setInsightsData] = useState(null);
-  // const [loading, setLoading] = useState(true);
-  // const [error, setError] = useState<string | null>(null);
+  // State for calendar
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [selectedDateRange, setSelectedDateRange] = useState<DateRange | undefined>({
+    from: undefined,
+    to: undefined,
+  });
 
-  // useEffect(() => {
-  //   setLoading(true);
-  //   Promise.all([
-  //     fetch("/api/upload").then(res => {
-  //       if (!res.ok) throw new Error("API error for upload");
-  //       return res.json();
-  //     }),
-  //     fetch("/api/insights").then(res => {
-  //       if (!res.ok) throw new Error("API error for insights");
-  //       return res.json();
-  //     }),
-  //   ])
-  //     .then(([upload, insights]) => {
-  //       setUploadData(upload);
-  //       setInsightsData(insights);
-  //       setLoading(false);
-  //     })
-  //     .catch((err) => {
-  //       setError(err.message);
-  //       setLoading(false);
-  //     });
-  // }, []);
+  // Format date range for display
+  const formatDateRange = () => {
+    if (!selectedDateRange?.from) return "Filter by Date";
+    
+    const fromDate = selectedDateRange.from.toLocaleDateString();
+    if (!selectedDateRange.to) return `From ${fromDate}`;
+    
+    const toDate = selectedDateRange.to.toLocaleDateString();
+    return `${fromDate} - ${toDate}`;
+  };
+
+  // Clear date range filter
+  const clearDateFilter = () => {
+    setSelectedDateRange({
+      from: undefined,
+      to: undefined,
+    });
+    setShowCalendar(false);
+  };
+
+  // Check if filter is active
+  const hasActiveFilter = selectedDateRange?.from !== undefined;
+
+  // Close calendar when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.calendar-container')) {
+        setShowCalendar(false);
+      }
+    };
+
+    if (showCalendar) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showCalendar]);
+
+  // Fetch data from API
+  const [uploadData, setUploadData] = useState<UploadData[] | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const apiURL = "http://localhost:5000"
+
+  useEffect(() => {
+    setLoading(true);
+    Promise.all([
+      fetch(`${apiURL}/api/analysis`,{
+        method: "GET",
+        credentials: 'include'
+      }).then(res => {
+        if (!res.ok) throw new Error("API error for upload");
+        return res.json();
+      }),
+      // fetch("/api/insights").then(res => {
+      //   if (!res.ok) throw new Error("API error for insights");
+      //   return res.json();
+      // }),
+    ])
+      .then(([upload]) => {
+        setUploadData(upload.data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(err.message);
+        setLoading(false);
+      });
+  }, []);
 
   return (
-    <div className="mx-10 mt-6">
-      <p className="text-[#6F6F6F] text-[20px] mx-8 mb-2">Posture</p>
-      <Slider className="mx-8" />
-      <p className="text-[#00205B] text-[45px] font-[600] mt-10 mx-8">Posture Insights</p>
-      <PostureInsightsCarousel insights={insights} className="mx-8" />
-      <hr className="my-8 mx-10"></hr>
-      <p className="text-[#00205B] text-[45px] font-[600] mx-10">Uploads</p>
-      <div className="upload-box grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 p-4 mx-10">
-        <Card className="bg-gray-200 border-dashed border-2 border-gray-300 hover:border-gray-400 transition-colors cursor-pointer lg:w-[40vw] lg:h-[350px] xl:w-[26vw] xl:h-[350px] add-upload-container">
-          <CardContent className="p-8 flex flex-col items-center justify-center h-64">
-            <div className="w-16 h-16 bg-[#00205B] rounded-full flex items-center justify-center mb-4">
-              <p className="text-white text-[3vw]">+</p>
+    <div className="min-h-screen w-full bg-background">
+      <div className="container mx-auto px-4 py-8">
+        {/* Posture Tabs */}
+        <div className="mb-8">
+          <h2 className="text-muted-foreground mb-4 text-[20px]">Posture</h2>
+          <Slider className="" />
+        </div>
+
+        {/* Posture Insights */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-primary mb-4">
+            Posture Insights <span className="text-lg font-normal text-muted-foreground">(Weekly)</span>
+          </h2>
+          <PostureInsightsCarousel insights={insights} />
+        </div>
+
+        {/* Uploads Section */}
+        <div>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-primary">Uploads</h2>
+            <div className="flex items-center space-x-4">
+              {/* Clear Filter Button */}
+              {hasActiveFilter && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="flex items-center space-x-1 text-muted-foreground hover:text-foreground"
+                  onClick={clearDateFilter}
+                >
+                  <X className="w-4 h-4" />
+                  <span>Clear</span>
+                </Button>
+              )}
+              <div className="relative calendar-container">
+                <Button 
+                  variant="outline" 
+                  className="flex items-center space-x-2 min-w-fit"
+                  onClick={() => setShowCalendar(!showCalendar)}
+                >
+                  <CalendarDays className="w-4 h-4" />
+                  <span className="whitespace-nowrap">{formatDateRange()}</span>
+                </Button>
+                {showCalendar && (
+                  <div className="absolute top-full mt-2 z-50 bg-card rounded-lg shadow-lg border border-border right-0">
+                    <Calendar
+                      mode="range"
+                      selected={selectedDateRange}
+                      onSelect={setSelectedDateRange}
+                      captionLayout="dropdown"
+                      fromYear={2020}
+                      toYear={2030}
+                      numberOfMonths={1}
+                      className="rounded-md border"
+                    />
+                  </div>
+                )}
+              </div>
+              <Button variant="outline" className="flex items-center space-x-2">
+                <span>Sort</span>
+                <ChevronDown className="w-4 h-4" />
+              </Button>
             </div>
-            <h3 className="text-xl font-semibold text-[#00205B]">New Analysis</h3>
-          </CardContent>
-        </Card>
-        {/* Sample Upload Cards */}
-        <UploadCard id={1} date="2023-10-01" />
-        <UploadCard id={2} date="2023-10-02" />
-        <UploadCard id={3} date="2023-10-03" />
-        <UploadCard id={4} date="2023-10-04" />
-        <UploadCard id={5} date="2023-10-05" />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* New Analysis Card */}
+            <Card className="bg-muted border-dashed border-2 border-border hover:border-primary/50 transition-colors cursor-pointer">
+              <CardContent className="p-8 flex flex-col items-center justify-center h-64">
+                <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mb-4">
+                  <Plus className="w-8 h-8 text-primary-foreground" />
+                </div>
+                <h3 className="text-xl font-semibold text-primary">New Analysis</h3>
+              </CardContent>
+            </Card>
+
+            {/* Conditional rendering based on loading state */}
+            {loading ? (
+              <div className="loading-spinner text-foreground">Loading...</div>
+            ) : error ? (
+              <div className="error-message text-destructive">{error}</div>
+            ) : (
+              uploadData && uploadData.map((upload: UploadData) => (
+                <UploadCard 
+                  key={upload.id} 
+                  id={upload.id} 
+                  date={upload.created_at}
+                  onViewAnalysis={() => {
+                    // Handle view analysis action
+                    console.log(`View analysis for upload ${upload.id}`);
+                  }}
+                />
+              ))
+            )}
+          </div>
+        </div>
       </div>
     </div>
   )

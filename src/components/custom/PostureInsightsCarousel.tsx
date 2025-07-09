@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import InsightsCard from "./InsightsCard/InsightsCard";
+import { GripHorizontal, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Insight {
-  severity_level: number;
-  message: string;
-  percentageChange: number;
-  improvement: boolean;
+  type: "critical" | "warning" | "good" | "info";
+  title: string;
+  content: string;
+  change: string;
 }
 
 interface PostureInsightsCarouselProps {
@@ -15,207 +16,208 @@ interface PostureInsightsCarouselProps {
 }
 
 export default function PostureInsightsCarousel({ insights, className }: PostureInsightsCarouselProps) {
-  // State Management
-  const [cardsPerView, setCardsPerView] = useState(3);
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState(0);
-  const [dragOffset, setDragOffset] = useState(0);
-  
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [currentSlide, setCurrentSlide] = useState(0)
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragStart, setDragStart] = useState(0)
+  const [dragOffset, setDragOffset] = useState(0)
+  const [cardsPerView, setCardsPerView] = useState(3)
+  const carouselRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
 
-  // Responsive Layout
+  // Responsive cards per view
   const getCardsPerView = () => {
     if (typeof window !== "undefined") {
-      if (window.innerWidth >= 1280) return 3; // Large desktop
-      if (window.innerWidth >= 1024) return 3; // Desktop
-      if (window.innerWidth >= 768) return 2;  // Tablet
-      if (window.innerWidth >= 640) return 2;  // Small tablet
-      return 1; // Mobile
+      if (window.innerWidth >= 1024) return 3 // lg screens
+      if (window.innerWidth >= 768) return 2 // md screens
+      return 1 // sm screens
     }
-    return 3;
-  };
+    return 3
+  }
 
   useEffect(() => {
-    const handleResize = () => {
-      const newCardsPerView = getCardsPerView();
-      setCardsPerView(newCardsPerView);
-      
-      // Recalculate max slides and clamp current slide if necessary
-      const newTotalSlides = Math.ceil(insights.length / newCardsPerView);
-      const newMaxSlides = Math.max(0, newTotalSlides - 1);
-      
-      // Ensure current slide doesn't exceed new maximum
-      setCurrentSlide(prev => Math.min(prev, newMaxSlides));
-    };
-    
-    setCardsPerView(getCardsPerView());
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [insights.length]);
+    const handleResize = () => setCardsPerView(getCardsPerView())
+    setCardsPerView(getCardsPerView())
+    if (typeof window !== "undefined") {
+      window.addEventListener("resize", handleResize)
+      return () => window.removeEventListener("resize", handleResize)
+    }
+  }, [])
 
-  // Slide Navigation
-  const totalSlides = Math.ceil(insights.length / cardsPerView); // Calculate total slides needed
-  const maxSlides = Math.max(0, totalSlides - 1); // Maximum slide index (0-based)
-  const cardWidth = 100 / cardsPerView;
+  const maxSlides = Math.max(0, insights.length - cardsPerView)
+  const cardWidth = 100 / cardsPerView
 
   const nextSlide = () => {
-    setCurrentSlide((prev) => Math.min(prev + 1, maxSlides));
-  };
+    setCurrentSlide((prev) => Math.min(prev + 1, maxSlides))
+  }
 
   const prevSlide = () => {
-    setCurrentSlide((prev) => Math.max(prev - 1, 0));
-  };
+    setCurrentSlide((prev) => Math.max(prev - 1, 0))
+  }
 
   const goToSlide = (index: number) => {
-    setCurrentSlide(Math.min(index, maxSlides));
-  };
+    setCurrentSlide(Math.min(index, maxSlides))
+  }
 
-  // Drag Handling
+  // Drag handlers
   const handleDragStart = (clientX: number) => {
-    setIsDragging(true);
-    setDragStart(clientX);
-    setDragOffset(0);
-  };
+    setIsDragging(true)
+    setDragStart(clientX)
+    setDragOffset(0)
+  }
 
   const handleDragMove = (clientX: number) => {
-    if (!isDragging) return;
-    setDragOffset(clientX - dragStart);
-  };
+    if (!isDragging) return
+
+    const offset = clientX - dragStart
+    setDragOffset(offset)
+  }
 
   const handleDragEnd = () => {
-    if (!isDragging) return;
-    const threshold = 50;
-    const direction = dragOffset > threshold ? -1 : dragOffset < -threshold ? 1 : 0;
+    if (!isDragging) return
 
-    if (direction === 1 && currentSlide < maxSlides) setCurrentSlide((prev) => prev + 1);
-    else if (direction === -1 && currentSlide > 0) setCurrentSlide((prev) => prev - 1);
+    const threshold = 50 // minimum drag distance to trigger slide change
+    const direction = dragOffset > threshold ? -1 : dragOffset < -threshold ? 1 : 0
 
-    setIsDragging(false);
-    setDragOffset(0);
-  };
+    if (direction === 1 && currentSlide < maxSlides) {
+      setCurrentSlide((prev) => prev + 1)
+    } else if (direction === -1 && currentSlide > 0) {
+      setCurrentSlide((prev) => prev - 1)
+    }
 
-  // Event Handlers (Mouse & Touch)
+    setIsDragging(false)
+    setDragOffset(0)
+  }
+
+  // Mouse events
   const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    handleDragStart(e.clientX);
-  };
+    e.preventDefault()
+    handleDragStart(e.clientX)
+  }
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    handleDragMove(e.clientX);
-  };
+    handleDragMove(e.clientX)
+  }
 
   const handleMouseUp = () => {
-    handleDragEnd();
-  };
+    handleDragEnd()
+  }
 
+  const handleMouseLeave = () => {
+    handleDragEnd()
+  }
+
+  // Touch events
   const handleTouchStart = (e: React.TouchEvent) => {
-    handleDragStart(e.touches[0].clientX);
-  };
+    handleDragStart(e.touches[0].clientX)
+  }
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    handleDragMove(e.touches[0].clientX);
-  };
+    handleDragMove(e.touches[0].clientX)
+  }
 
   const handleTouchEnd = () => {
-    handleDragEnd();
-  };
+    handleDragEnd()
+  }
 
-  // Transform Calculation for Sliding
   const calculateTransform = () => {
-    const baseTransform = currentSlide * cardWidth;
-    const dragTransform = isDragging ? (dragOffset / (containerRef.current?.offsetWidth || 1)) * 100 : 0;
-    return -(baseTransform - dragTransform);
-  };
-
-  // Create dots array based on actual number of slides needed
-  const dots = Array.from({ length: totalSlides }, (_, i) => i);
+    const baseTransform = currentSlide * cardWidth
+    const dragTransform = isDragging ? (dragOffset / (containerRef.current?.offsetWidth || 1)) * 100 : 0
+    return -(baseTransform - dragTransform)
+  }
 
   return (
-    <div className={`insights-carousel ${className} gap-10`}>
-      {/* Carousel Container */}
-      <div 
-        ref={containerRef}
-        className="overflow-hidden cursor-grab active:cursor-grabbing"
+    <div className={`relative ${className}`} ref={containerRef}>
+      {/* Scrollable indicator */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center space-x-2 text-sm text-gray-500">
+          <GripHorizontal className="w-4 h-4" />
+          <span>Drag to scroll through insights</span>
+        </div>
+      </div>
+
+      <div
+        className={`overflow-hidden rounded-lg relative ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}
+        ref={carouselRef}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
+        {/* Fade indicators for scrollable content */}
+        {currentSlide > 0 && (
+          <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-[#f7f7f7]-200 to-transparent dark:from-black z-10 pointer-events-none" />
+        )}
+        {currentSlide < maxSlides && (
+          <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#f7f7f7]-200 to-transparent dark:from-black-950 z-10 pointer-events-none" />
+        )}
+
         <div
-          className="flex transition-transform duration-300 ease-out"
+          className={`flex transition-transform duration-300 ease-out ${isDragging ? "transition-none" : ""} gap-2 py-2`}
           style={{
             transform: `translateX(${calculateTransform()}%)`,
             width: `${(insights.length / cardsPerView) * 100}%`,
           }}
         >
           {insights.map((insight, index) => (
-            <div
-              key={index}
-              className={`flex-shrink-0 select-none transition-transform duration-200 ${
-                isDragging ? 'scale-95' : ''
-              } ${cardsPerView === 1 ? 'px-4' : cardsPerView === 2 ? 'px-3' : 'px-2'}`}
-              style={{ width: `${100 / insights.length}%` }}
-            >
+            <div key={index} className="flex-shrink-0 px-2 select-none" style={{ width: `${100 / insights.length}%` }}>
               <InsightsCard
-                severity_level={insight.severity_level}
-                message={insight.message}
-                percentageChange={insight.percentageChange}
-                improvement={insight.improvement}
+                type={insight.type}
+                title={insight.title}
+                content={insight.content}
+                change={insight.change}
+                isDragging={isDragging}
               />
             </div>
           ))}
         </div>
       </div>
 
-      {/* Dot Indicators */}
-      {totalSlides > 1 && (
-        <div className="flex justify-center mt-4 sm:mt-6">
-          <div className="flex gap-1 sm:gap-2">
-            {dots.map((_, i) => (
+      {/* Navigation Controls - Centered below cards */}
+      <div className="flex items-center justify-center mt-6 space-x-4">
+        {/* Left Navigation Button */}
+        <Button
+          variant="outline"
+          size="icon"
+          className={`bg-white shadow-lg hover:bg-gray-50 transition-all ${
+            currentSlide > 0 ? "opacity-100" : "opacity-30 cursor-not-allowed"
+          }`}
+          onClick={prevSlide}
+          disabled={currentSlide === 0}
+        >
+          <ChevronLeft className="w-4 h-4" />
+        </Button>
+
+        {/* Dots Indicator */}
+        {maxSlides > 0 && (
+          <div className="flex items-center space-x-2 px-4">
+            {Array.from({ length: maxSlides}, (_, index) => (
               <button
-                key={i}
-                className={`transition-colors duration-200 rounded-full ${
-                  cardsPerView === 1 ? 'w-4 h-4' : 'w-3 h-3'
-                } ${
-                  currentSlide === i ? "bg-[#00205B]" : "bg-gray-300 hover:bg-gray-400"
+                key={index}
+                className={`h-2 rounded-full transition-all duration-200 hover:scale-110 ${
+                  index === currentSlide ? "bg-blue-900 w-6" : "bg-gray-300 w-2 hover:bg-gray-400"
                 }`}
-                onClick={() => goToSlide(i)}
+                onClick={() => goToSlide(index)}
               />
             ))}
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Navigation Controls */}
-      {totalSlides > 1 && (
-        <div className="flex items-center justify-center mt-3 sm:mt-4 gap-3 sm:gap-4">
-          {/* Previous Arrow */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={prevSlide}
-            disabled={currentSlide === 0}
-            className={`p-0 ${cardsPerView === 1 ? 'w-10 h-10 text-lg' : 'w-8 h-8'}`}
-          >
-            ⟨
-          </Button>
-
-          {/* Next Arrow */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={nextSlide}
-            disabled={currentSlide >= maxSlides}
-            className={`p-0 ${cardsPerView === 1 ? 'w-10 h-10 text-lg' : 'w-8 h-8'}`}
-          >
-            ⟩
-          </Button>
-        </div>
-      )}
+        {/* Right Navigation Button */}
+        <Button
+          variant="outline"
+          size="icon"
+          className={`bg-white shadow-lg hover:bg-gray-50 transition-all ${
+            currentSlide < maxSlides ? "opacity-100" : "opacity-30 cursor-not-allowed"
+          }`}
+          onClick={nextSlide}
+          disabled={currentSlide >= maxSlides}
+        >
+          <ChevronRight className="w-4 h-4" />
+        </Button>
+      </div>
     </div>
   );
 }

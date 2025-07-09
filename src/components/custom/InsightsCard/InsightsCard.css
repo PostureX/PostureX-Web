@@ -6,6 +6,16 @@
   max-height: 210px;
 }
 
+.draggable{
+  transform: scale(0.95);
+  transition: transform 0.1s ease;
+}
+
+.not-draggable:hover {
+  transform: scale(1.02);
+  transition: transform 0.1s ease;
+}
+
 .scrollbar-hide {
     scrollbar-width: none; /* For Firefox */
     -ms-overflow-style: none; /* For Internet Explorer and Edge */
