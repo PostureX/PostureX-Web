@@ -1,4 +1,4 @@
-import { useAnalysis } from "@/hooks/Analysis"
+import { useAnalysis } from "@/hooks/AnalysisContext"
 import { Progress } from "@radix-ui/react-progress"
 import { Camera } from "lucide-react"
 

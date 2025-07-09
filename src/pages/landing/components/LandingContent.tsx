@@ -60,17 +60,19 @@ export default function LandingContent({ onGetStarted }: LandingContentProps) {
 
   const testimonials = [
     {
-      name: "Sarah Johnson",
-      role: "Police Training Instructor",
+      name: "Yusuf Dikec",
+      role: "Olympic Athlete",
       content:
-        "PostureX has revolutionized our training program. The real-time feedback helps officers improve their stance immediately.",
+        "PostureX gives me instant, actionable feedback that helps me refine my stance and stay at the top of my game. It's like having a world-class coach with me every session.",
       rating: 5,
+      image: "/images/testimonials/yusuf_dikec.jpg",
     },
     {
       name: "Mike Chen",
       role: "Competitive Shooter",
       content: "The precision of the analysis is incredible. I've improved my scores by 15% since using PostureX.",
       rating: 5,
+      image: "/images/testimonials/mike_chen.jpg",
     },
     {
       name: "David Rodriguez",
@@ -78,6 +80,7 @@ export default function LandingContent({ onGetStarted }: LandingContentProps) {
       content:
         "Essential tool for modern firearms training. The progress tracking keeps our recruits motivated and improving.",
       rating: 5,
+      image: "/images/testimonials/david_rodriguez.jpg",
     },
   ]
 
@@ -133,7 +136,7 @@ export default function LandingContent({ onGetStarted }: LandingContentProps) {
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 py-20">
         <AnimatedNetworkBackground />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 z-10 relative pointer-events-none">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
                 <div className="relative w-48 group mb-2 text-center">
@@ -156,11 +159,11 @@ export default function LandingContent({ onGetStarted }: LandingContentProps) {
                 feedback and personalized recommendations for optimal performance.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button size="lg" onClick={onGetStarted} className="text-lg px-8 py-3">
+                <Button size="lg" onClick={onGetStarted} className="text-lg px-8 py-3 pointer-events-auto">
                   Start Free Trial
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
-                <Button size="lg" variant="outline" className="text-lg px-8 py-3 bg-transparent">
+                <Button size="lg" variant="outline" className="text-lg px-8 py-3 bg-transparent pointer-events-auto">
                   <Play className="w-5 h-5 mr-2" />
                   Watch Demo
                 </Button>
@@ -176,7 +179,7 @@ export default function LandingContent({ onGetStarted }: LandingContentProps) {
                 </div>
               </div>
             </div>
-            <Card variant="glassWithHoverEffect" className="relative rounded-2xl shadow-2xl p-8 z-1">
+            <Card variant="glassWithHoverEffect" className="relative rounded-2xl shadow-2xl p-8 pointer-events-auto">
               <CardContent className="p-0">
                 <div className="bg-gray-900 dark:bg-gray-800 rounded-lg aspect-video flex items-center justify-center mb-6">
                   <div className="text-center text-gray-400">
@@ -262,20 +265,27 @@ export default function LandingContent({ onGetStarted }: LandingContentProps) {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {testimonials.map((testimonial, index) => (
-              <Card key={index} className="">
+                <Card key={index} className="">
                 <CardContent className="p-6">
                   <div className="flex items-center mb-4">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
-                    ))}
+                  {[...Array(testimonial.rating)].map((_, i) => (
+                    <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
+                  ))}
                   </div>
-                  <p className="text-card-foreground mb-4 italic">"{testimonial.content}"</p>
+                  <div className="flex items-center gap-4 mb-4">
+                  <img
+                    src={testimonial.image}
+                    alt={testimonial.name}
+                    className="w-12 h-12 rounded-full object-cover border-primary"
+                  />
                   <div>
                     <div className="font-semibold text-card-foreground">{testimonial.name}</div>
                     <div className="text-sm text-card-muted">{testimonial.role}</div>
                   </div>
+                  </div>
+                  <p className="text-card-foreground mb-4 italic">"{testimonial.content}"</p>
                 </CardContent>
-              </Card>
+                </Card>
             ))}
           </div>
         </div>

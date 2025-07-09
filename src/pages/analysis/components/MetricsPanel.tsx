@@ -1,5 +1,5 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { useAnalysis } from "@/hooks/Analysis";
+import { useAnalysis } from "@/hooks/AnalysisContext";
 import { Target, AlertTriangle, CheckCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";

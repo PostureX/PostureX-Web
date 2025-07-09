@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState } from "react";
 import { Target, CameraOff } from "lucide-react";
-import { useAnalysis } from "@/hooks/Analysis";
+import { useAnalysis } from "@/hooks/AnalysisContext";
 
 export default function LiveWebcam() {
     const videoRef = useRef<HTMLVideoElement>(null);

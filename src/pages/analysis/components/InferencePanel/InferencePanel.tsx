@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { useAnalysis } from "@/hooks/Analysis"
+import { useAnalysis } from "@/hooks/AnalysisContext"
 import { Target, Camera, Square, Play, CameraOff, SwitchCamera } from "lucide-react"
 import AnalysisOverlay from "./AnalysisOverlay"
 import LiveWebcam from "./LiveWebcam"
@@ -46,7 +46,7 @@ export default function InferencePanel() {
                         {analysisMode === "live" ? "Live Camera Feed" : "Video Analysis"}
                     </CardTitle>
                     <div className="flex items-center gap-2">
-                        {analysisMode === "live" ? (
+                        {analysisMode === "live" && isCameraOn ? (
                             <Button
                                 variant={isAnalyzing ? "destructive" : "default"}
                                 size="sm"
@@ -122,7 +122,7 @@ export default function InferencePanel() {
                                         // Request permission and update device list
                                         try {
                                             await navigator.mediaDevices.getUserMedia({ video: true });
-                                        } catch (e) {
+                                        } catch {
                                             // handle error if needed
                                         }
                                         await fetchDevices();

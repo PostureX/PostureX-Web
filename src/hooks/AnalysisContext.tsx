@@ -1,4 +1,6 @@
-import { createContext, useContext, useState, ReactNode } from "react"
+import { createContext, useContext, useState, ReactNode, useEffect, useRef } from "react"
+import { InferenceSettingsProvider } from "./InferenceSettingsContext"
+
 
 type AnalysisMode = "live" | "upload"
 
@@ -69,20 +71,96 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
         { name: "Balance", value: 91, status: "excellent" },
     ])
 
-    const [keypoints, setKeypoints] = useState<Keypoint[]>([
-        { id: 1, name: "Head", x: 320, y: 80, confidence: 0.95 },
-        { id: 2, name: "Left Shoulder", x: 280, y: 140, confidence: 0.92 },
-        { id: 3, name: "Right Shoulder", x: 360, y: 140, confidence: 0.94 },
-        { id: 4, name: "Left Elbow", x: 240, y: 200, confidence: 0.89 },
-        { id: 5, name: "Right Elbow", x: 400, y: 200, confidence: 0.91 },
-        { id: 6, name: "Left Wrist", x: 220, y: 260, confidence: 0.87 },
-        { id: 7, name: "Right Wrist", x: 420, y: 260, confidence: 0.93 },
-    ])
+    const [keypoints, setKeypoints] = useState<Keypoint[]>([])
+
+    const wsRef = useRef<WebSocket | null>(null);
+    const frameIntervalRef = useRef<number | null>(null);
 
     const fetchDevices = async () => {
         const devices = await navigator.mediaDevices.enumerateDevices();
         setCameraDevices(devices.filter(d => d.kind === "videoinput"));
     }
+
+    useEffect(() => {
+        if (!isCameraOn) {
+            setIsAnalyzing(false);
+            setVideoUrl(null);
+        }
+    }, [isCameraOn]);
+
+    useEffect(() => {
+        if (isAnalyzing && analysisMode === "live" && isCameraOn) {
+            // Open WebSocket connection
+            const ws = new WebSocket("ws://10.3.250.181:8891");
+            wsRef.current = ws;
+
+            ws.onopen = () => {
+                // Start sending frames at 10 FPS
+                frameIntervalRef.current = window.setInterval(async () => {
+                    // Get the current video frame from the webcam
+                    const video = document.querySelector("video");
+                    if (!video) return;
+
+                    // Create a canvas to capture the frame
+                    const canvas = document.createElement("canvas");
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    const ctx = canvas.getContext("2d");
+                    if (!ctx) return;
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                    // Convert to base64
+                    const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
+                    const base64 = dataUrl.split(",")[1];
+
+                    // Send to server
+                    ws.send(JSON.stringify({ image: base64 }));
+                }, 100); // 10 FPS
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.keypoints) {
+                        // Convert array-of-arrays to array-of-objects
+                        const mappedKeypoints = data.keypoints.map((arr: unknown[], idx: number) => ({
+                            x: arr[0],
+                            y: arr[1],
+                            confidence: arr[2],
+                            id: idx + 1,
+                        }));
+                        setKeypoints(mappedKeypoints);
+                    }
+                } catch (e) {
+                    console.error("WebSocket message error:", e);
+                }
+            };
+
+            ws.onerror = (e) => {
+                // Optionally handle error
+                console.error("WebSocket error:", e);
+            };
+
+            ws.onclose = () => {
+                if (frameIntervalRef.current) {
+                    clearInterval(frameIntervalRef.current);
+                    frameIntervalRef.current = null;
+                }
+            };
+
+            // Cleanup on unmount or when analysis stops
+            return () => {
+                if (wsRef.current) {
+                    wsRef.current.close();
+                    wsRef.current = null;
+                }
+                if (frameIntervalRef.current) {
+                    clearInterval(frameIntervalRef.current);
+                    frameIntervalRef.current = null;
+                }
+            };
+        }
+    }, [isAnalyzing, analysisMode, isCameraOn]);
 
     return (
         <AnalysisContext.Provider
@@ -103,7 +181,9 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
                 fetchDevices
             }}
         >
-            {children}
+            <InferenceSettingsProvider>
+                {children}
+            </InferenceSettingsProvider>
         </AnalysisContext.Provider>
     )
 }

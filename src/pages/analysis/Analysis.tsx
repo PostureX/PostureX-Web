@@ -5,16 +5,31 @@ import {
   Activity,
   Camera,
 } from "lucide-react"
-import { useAnalysis } from "@/hooks/Analysis"
+import { useAnalysis } from "@/hooks/AnalysisContext"
 import AdditionalInfoPanel from "./components/AditionalInfoPanel"
 import InferencePanel from "./components/InferencePanel/InferencePanel"
 import MetricsPanel from "./components/MetricsPanel"
+import InferenceSettings from "./components/InferenceSettings";
+import { useEffect, useState } from "react";
 
 export default function Analysis() {
-  const { analysisMode } = useAnalysis();
+  const { analysisMode, setIsAnalyzing } = useAnalysis();
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  useEffect(() => {
+    if (settingsOpen) {
+      // Pause analysis when settings are open
+      setIsAnalyzing(false);
+    } else {
+      // Resume analysis when settings are closed
+      setIsAnalyzing(true);
+    }
+      
+  }, [setIsAnalyzing, settingsOpen]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
+      <InferenceSettings open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -36,7 +51,7 @@ export default function Analysis() {
                   </>
               }
             </Badge>
-            <Button variant="outline" size="icon">
+            <Button variant="outline" size="icon" onClick={() => setSettingsOpen(true)}>
               <Settings className="w-4 h-4" />
             </Button>
           </div>
