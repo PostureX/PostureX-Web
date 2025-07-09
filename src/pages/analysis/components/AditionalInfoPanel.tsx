@@ -1,6 +1,6 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAnalysis } from "@/hooks/Analysis";
+import { useAnalysis } from "@/hooks/AnalysisContext";
 import { AlertCircle, CheckCircle, TriangleAlert } from "lucide-react";
 
 export default function AdditionalInfoPanel() {

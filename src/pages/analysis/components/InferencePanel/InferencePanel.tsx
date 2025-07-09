@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { useAnalysis } from "@/hooks/Analysis"
+import { useAnalysis } from "@/hooks/AnalysisContext"
 import { Target, Camera, Square, Play, CameraOff, SwitchCamera } from "lucide-react"
 import AnalysisOverlay from "./AnalysisOverlay"
 import LiveWebcam from "./LiveWebcam"
