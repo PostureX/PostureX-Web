@@ -60,17 +60,19 @@ export default function LandingContent({ onGetStarted }: LandingContentProps) {
 
   const testimonials = [
     {
-      name: "Sarah Johnson",
-      role: "Police Training Instructor",
+      name: "Yusuf Dikec",
+      role: "Olympic Athlete",
       content:
-        "PostureX has revolutionized our training program. The real-time feedback helps officers improve their stance immediately.",
+        "PostureX gives me instant, actionable feedback that helps me refine my stance and stay at the top of my game. It's like having a world-class coach with me every session.",
       rating: 5,
+      image: "/images/testimonials/yusuf_dikec.jpg",
     },
     {
       name: "Mike Chen",
       role: "Competitive Shooter",
       content: "The precision of the analysis is incredible. I've improved my scores by 15% since using PostureX.",
       rating: 5,
+      image: "/images/testimonials/mike_chen.jpg",
     },
     {
       name: "David Rodriguez",
@@ -78,6 +80,7 @@ export default function LandingContent({ onGetStarted }: LandingContentProps) {
       content:
         "Essential tool for modern firearms training. The progress tracking keeps our recruits motivated and improving.",
       rating: 5,
+      image: "/images/testimonials/david_rodriguez.jpg",
     },
   ]
 
@@ -262,20 +265,27 @@ export default function LandingContent({ onGetStarted }: LandingContentProps) {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {testimonials.map((testimonial, index) => (
-              <Card key={index} className="">
+                <Card key={index} className="">
                 <CardContent className="p-6">
                   <div className="flex items-center mb-4">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
-                    ))}
+                  {[...Array(testimonial.rating)].map((_, i) => (
+                    <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
+                  ))}
                   </div>
-                  <p className="text-card-foreground mb-4 italic">"{testimonial.content}"</p>
+                  <div className="flex items-center gap-4 mb-4">
+                  <img
+                    src={testimonial.image}
+                    alt={testimonial.name}
+                    className="w-12 h-12 rounded-full object-cover border-primary"
+                  />
                   <div>
                     <div className="font-semibold text-card-foreground">{testimonial.name}</div>
                     <div className="text-sm text-card-muted">{testimonial.role}</div>
                   </div>
+                  </div>
+                  <p className="text-card-foreground mb-4 italic">"{testimonial.content}"</p>
                 </CardContent>
-              </Card>
+                </Card>
             ))}
           </div>
         </div>
