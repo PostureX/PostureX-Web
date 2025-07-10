@@ -4,7 +4,7 @@ import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
-import { X, User, Hand, Eye, Activity, Settings, RotateCcw, Save, Info } from "lucide-react"
+import { X, User, Hand, Eye, Activity, Settings, RotateCcw, Info } from "lucide-react"
 import { useInferenceSettings } from "@/hooks/InferenceSettingsContext"
 
 interface InferenceSettingsProps {
