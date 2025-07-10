@@ -5,45 +5,48 @@ import { useLayoutEffect, useState } from "react"
 // Keypoint index ranges for each part (COCO WholeBody)
 const PART_RANGES = {
     upperBody: [
-        ...Array.from({ length: 17 }, (_, i) => i), // 0-16 BODY
+        5, 6, 7, 8, 9, 10, 11, 12
     ],
     face: [
-        ...Array.from({ length: 68 }, (_, i) => 17 + i), // 17-84 FACE
+        ...Array.from({ length: 66 }, (_, i) => 23 + i),  // 23-88 FACE
     ],
     leftHand: [
-        ...Array.from({ length: 21 }, (_, i) => 91 + i), // 91-111 LEFT HAND
+        ...Array.from({ length: 21 }, (_, i) => 112 + i), // 91-111 LEFT HAND
     ],
     rightHand: [
-        ...Array.from({ length: 21 }, (_, i) => 112 + i), // 112-132 RIGHT HAND
+        ...Array.from({ length: 21 }, (_, i) => 91 + i), // 112-132 RIGHT HAND
     ],
     lowerBody: [
-        11, 12, 13, 14, 15, 16, // hips, knees, ankles
+        13, 14, 15, 16
     ],
 };
 
 const COCO_WHOLEBODY_SKELETON: [number, number][] = [
     // BODY
-    [0, 1], [1, 2], [2, 3], [3, 4],
-    [0, 5], [5, 6], [6, 7], [7, 8],
-    [5, 11], [6, 12],
-    [11, 12], [11, 13], [13, 15],
+    [5, 6],
+    [6, 8], [8, 10],
+    [5, 7], [7, 9],
+    [6, 12], [5, 11],
     [12, 14], [14, 16],
-    [0, 17],
+    [11, 13], [13, 15],
+    
     // FACE
-    ...Array.from({ length: 16 }, (_, i): [number, number] => [17 + i, 17 + i + 1]), // Jawline
-    [33, 34], [34, 35], [35, 36], // Right eyebrow
-    [36, 37], [37, 38], [38, 39], // Left eyebrow
-    [39, 40], [40, 41], [41, 42], [42, 43], // Nose bridge and bottom
-    [44, 45], [45, 46], [46, 47], [47, 48], [48, 49], [49, 44], // Right eye
-    [50, 51], [51, 52], [52, 53], [53, 54], [54, 55], [55, 50], // Left eye
-    [56, 57], [57, 58], [58, 59], [59, 60], [60, 61], [61, 62], [62, 63], [63, 56], // Outer lips
-    [64, 65], [65, 66], [66, 67], [67, 64], // Inner lips
+    ...Array.from({ length: 16 }, (_, i): [number, number] => [23 + i, 23 + i + 1]), // Jawline
+    ...Array.from({ length: 4 }, (_, i): [number, number] => [45 + i, 45 + i + 1]), // Right eyebrow
+    ...Array.from({ length: 4 }, (_, i): [number, number] => [41 + i, 41 + i + 1]), // Left eyebrow
+    [50, 51], [51, 52], [52, 53], [53, 56], [56, 55], [55, 54], [56, 57], [57, 58], // Nose bridge and bottom
+    ...Array.from({ length: 5 }, (_, i): [number, number] => [65 + i, 65 + i + 1]), // Right eye
+    ...Array.from({ length: 5 }, (_, i): [number, number] => [59 + i, 59 + i + 1]), // Left eye
+    ...Array.from({ length: 10 }, (_, i): [number, number] => [71 + i, 71 + i + 1]), // Outer lips
+    [72, 84], [84, 85], [85, 86], [86, 87], [87, 77], // Inner lips
+    
     // LEFT HAND (uncomment if you have these keypoints)
     [91, 92], [92, 93], [93, 94],
     [91, 95], [95, 96], [96, 97],
     [91, 98], [98, 99], [99, 100],
     [91, 101], [101, 102], [102, 103],
     [91, 104], [104, 105], [105, 106],
+
     // RIGHT HAND
     [112, 113], [113, 114], [114, 115],
     [112, 116], [116, 117], [117, 118],
@@ -71,8 +74,11 @@ export default function AnalysisOverlay() {
     });
 
     useLayoutEffect(() => {
+        let video: HTMLVideoElement | null = null;
+        let resizeObserver: ResizeObserver | null = null;
+
         function updateDims() {
-            const video = document.querySelector("video");
+            video = document.querySelector("video");
             if (!video) return;
             if (video.videoWidth === 0 || video.videoHeight === 0) return;
 
@@ -107,23 +113,32 @@ export default function AnalysisOverlay() {
             });
         }
 
-        // Listen for video metadata and window resize
-        const video = document.querySelector("video");
+        // Run once and on every relevant change
+        updateDims();
+
+        // Listen for video metadata, resize, and window resize
+        video = document.querySelector("video");
         if (video) {
             video.addEventListener("loadedmetadata", updateDims);
+            // Listen for video element resize (e.g., when layout changes)
+            if ("ResizeObserver" in window) {
+                resizeObserver = new ResizeObserver(updateDims);
+                resizeObserver.observe(video);
+            }
         }
         window.addEventListener("resize", updateDims);
 
-        // Initial update (in case video is already loaded)
-        updateDims();
+        // Also re-run when keypoints or camera state changes (to catch stream switches)
+        // (You can add isCameraOn, isAnalyzing, keypoints.length to the dependency array)
 
         return () => {
             if (video) {
                 video.removeEventListener("loadedmetadata", updateDims);
+                if (resizeObserver) resizeObserver.disconnect();
             }
             window.removeEventListener("resize", updateDims);
         };
-    }, []);
+    }, [isAnalyzing, keypoints.length]);
 
     // Map keypoints to displayed coordinates
     function mapPoint(point: { x: number, y: number }) {
@@ -145,6 +160,11 @@ export default function AnalysisOverlay() {
 
     const videoReady = videoDims.width > 0 && videoDims.height > 0;
 
+    const maxIndex = keypoints.length - 1;
+    console.log("max keypoint index:", maxIndex);
+    console.log("AnalysisOverlay keypoints:", allowedIndices);
+    console.log("keypoints array:", keypoints);
+
     return (
         <>
             {isAnalyzing && videoReady && (
@@ -152,33 +172,32 @@ export default function AnalysisOverlay() {
                     {/* Draw skeleton connections */}
                     {COCO_WHOLEBODY_SKELETON.map(([from, to], idx) => {
                         if (!allowedIndices.has(from) || !allowedIndices.has(to)) return null;
+                        if (!keypoints[from] || !keypoints[to]) return null;
                         const kp1 = keypoints[from];
                         const kp2 = keypoints[to];
                         if (
-                            kp1 && kp2 &&
-                            typeof kp1.x === "number" && typeof kp1.y === "number" &&
-                            typeof kp2.x === "number" && typeof kp2.y === "number"
-                        ) {
-                            const p1 = mapPoint(kp1);
-                            const p2 = mapPoint(kp2);
-                            return (
-                                <line
-                                    key={idx}
-                                    x1={p1.x}
-                                    y1={p1.y}
-                                    x2={p2.x}
-                                    y2={p2.y}
-                                    stroke="#3b82f6"
-                                    strokeWidth="2"
-                                    opacity="0.7"
-                                />
-                            );
-                        }
-                        return null;
+                            typeof kp1.x !== "number" || typeof kp1.y !== "number" ||
+                            typeof kp2.x !== "number" || typeof kp2.y !== "number"
+                        ) return null;
+                        const p1 = mapPoint(kp1);
+                        const p2 = mapPoint(kp2);
+                        return (
+                            <line
+                                key={idx}
+                                x1={p1.x}
+                                y1={p1.y}
+                                x2={p2.x}
+                                y2={p2.y}
+                                stroke="#3b82f6"
+                                strokeWidth="2"
+                                opacity="0.7"
+                            />
+                        );
                     })}
                     {/* Draw keypoints */}
                     {keypoints.map((point, index) => {
                         if (!allowedIndices.has(index)) return null;
+                        if (!point || typeof point.x !== "number" || typeof point.y !== "number") return null;
                         const mapped = mapPoint(point);
                         return (
                             <g key={index}>

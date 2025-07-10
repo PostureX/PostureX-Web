@@ -173,10 +173,10 @@ export default function InferenceSettings({ open, onClose }: InferenceSettingsPr
               <RotateCcw className="w-4 h-4 mr-2" />
               Reset All
             </Button>
-            <Button onClick={onClose} size="sm" className="flex-1">
+            {/* <Button onClick={onClose} size="sm" className="flex-1">
               <Save className="w-4 h-4 mr-2" />
               Apply Settings
-            </Button>
+            </Button> */}
           </div>
 
           {/* Info Section */}

@@ -25,6 +25,7 @@ export default function InferencePanel() {
         cameraIndex,
         setCameraIndex,
         fetchDevices,
+        cameraError,
     } = analysis;
 
     const handleVideoPlay = () => {
@@ -46,7 +47,7 @@ export default function InferencePanel() {
                         {analysisMode === "live" ? "Live Camera Feed" : "Video Analysis"}
                     </CardTitle>
                     <div className="flex items-center gap-2">
-                        {analysisMode === "live" && isCameraOn ? (
+                        {analysisMode === "live" && isCameraOn && !cameraError ? (
                             <Button
                                 variant={isAnalyzing ? "destructive" : "default"}
                                 size="sm"

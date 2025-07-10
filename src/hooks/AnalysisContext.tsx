@@ -29,6 +29,8 @@ interface AnalysisContextType {
     setCameraIndex: (v: number) => void
     cameraIndex: number
     setIsCameraOn: (v: boolean) => void
+    cameraError: boolean
+    setCameraError: (v: boolean) => void
     uploadedVideo: File | null
     setUploadedVideo: (v: File | null) => void
     videoUrl: string | null
@@ -56,6 +58,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
     const [isCameraOn, setIsCameraOn] = useState(false)
     const [cameraDevices, setCameraDevices] = useState<MediaDeviceInfo[]>([]);
     const [cameraIndex, setCameraIndex] = useState(0);
+    const [cameraError, setCameraError] = useState(false)
     const [uploadedVideo, setUploadedVideo] = useState<File | null>(null)
     const [videoUrl, setVideoUrl] = useState<string | null>(null)
     const [isVideoPlaying, setIsVideoPlaying] = useState(false)
@@ -170,6 +173,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
                 analysisMode, setAnalysisMode,
                 isCameraOn, setIsCameraOn,
                 cameraIndex, setCameraIndex,
+                cameraError, setCameraError,
                 uploadedVideo, setUploadedVideo,
                 videoUrl, setVideoUrl,
                 isVideoPlaying, setIsVideoPlaying,

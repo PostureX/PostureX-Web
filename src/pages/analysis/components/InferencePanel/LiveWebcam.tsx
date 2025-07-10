@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect } from "react";
 import { Target, CameraOff } from "lucide-react";
 import { useAnalysis } from "@/hooks/AnalysisContext";
 
@@ -6,8 +6,7 @@ export default function LiveWebcam() {
     const videoRef = useRef<HTMLVideoElement>(null);
     const streamRef = useRef<MediaStream | null>(null);
     const cleanupPromiseRef = useRef<Promise<void>>(Promise.resolve());
-    const { isAnalyzing, isCameraOn, cameraDevices, cameraIndex } = useAnalysis();
-    const [cameraError, setCameraError] = useState(false);
+    const { isAnalyzing, isCameraOn, cameraDevices, cameraIndex, cameraError, setCameraError } = useAnalysis();
 
     useEffect(() => {
         let isMounted = true;
@@ -71,7 +70,7 @@ export default function LiveWebcam() {
             isMounted = false;
             cleanupPromiseRef.current = cleanupPromiseRef.current.then(cleanupStream);
         };
-    }, [isCameraOn, cameraDevices, cameraIndex]);
+    }, [isCameraOn, cameraDevices, cameraIndex, setCameraError]);
 
     return (
         <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
@@ -91,7 +90,7 @@ export default function LiveWebcam() {
                     </div>
                 </div>
             ) : !isAnalyzing && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black opacity-80">
                     <div className="relative z-10 flex flex-col items-center pointer-events-none">
                         <Target className="w-16 h-16 mx-auto mb-4 opacity-50 text-gray-400" />
                         <p className="text-sm mt-2 text-gray-400">Click "Start Analysis" to begin</p>

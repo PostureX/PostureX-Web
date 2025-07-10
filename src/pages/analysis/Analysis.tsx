@@ -20,11 +20,8 @@ export default function Analysis() {
     if (settingsOpen) {
       // Pause analysis when settings are open
       setIsAnalyzing(false);
-    } else {
-      // Resume analysis when settings are closed
-      setIsAnalyzing(true);
     }
-      
+    // Do NOT resume analysis when settings are closed
   }, [setIsAnalyzing, settingsOpen]);
 
   return (
