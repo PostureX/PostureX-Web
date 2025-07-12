@@ -8,7 +8,7 @@ import "./Home.css";
 import Slider from "@/components/custom/Slider/Slider";
 import { CalendarDays, ChevronDown, Plus, Moon, Sun, X } from "lucide-react";
 import { DateRange } from "react-day-picker";
-import { useTheme } from "@/hooks/Theme";
+import { useTheme } from "@/hooks/ThemeContext";
 
 type UploadData = {
   created_at: string;

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Mail, Lock, Eye, EyeOff } from "lucide-react"
 import { useState } from "react"
-import { useAuth } from "@/hooks/Auth"
+import { useAuth } from "@/hooks/AuthContext"
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),

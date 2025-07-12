@@ -3,7 +3,7 @@ import './index.css'
 import { RouterProvider } from 'react-router'
 import { router } from './routes/routes.tsx'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { ThemeProvider } from './hooks/Theme.tsx'
+import { ThemeProvider } from './hooks/ThemeContext.tsx'
 
 const queryClient = new QueryClient({
   defaultOptions: {

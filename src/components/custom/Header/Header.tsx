@@ -1,4 +1,4 @@
-import { useAuth } from "@/hooks/Auth";
+import { useAuth } from "@/hooks/AuthContext";
 import ThemeToggle from "../ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { Menu, X, User } from "lucide-react";

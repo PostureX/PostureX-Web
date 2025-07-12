@@ -8,7 +8,7 @@ export default function Slider({ className }: { className?: string }) {
     const buttons = ["Front", "Side", "Grip"];
 
     return(
-        <div className={`flex justify-around shadow-lg bg-muted border border-border rounded-lg p-1 min-w-[450px] max-w-[650px] ${className}`}>
+        <div className={`flex justify-around shadow-lg bg-muted border border-border rounded-lg p-1 max-w-[650px] ${className}`}>
             {buttons.map((button) => (
                 <button
                     key={button}

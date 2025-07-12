@@ -1,4 +1,4 @@
-import { useTheme } from "@/hooks/Theme"
+import { useTheme } from "@/hooks/ThemeContext"
 
 export default function Logo({ className = "h-10 w-auto" }: { className?: string }) {
   const [theme] = useTheme();

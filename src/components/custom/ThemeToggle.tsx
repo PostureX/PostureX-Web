@@ -1,4 +1,4 @@
-import { useTheme } from "@/hooks/Theme";
+import { useTheme } from "@/hooks/ThemeContext";
 import { Button } from "../ui/button";
 import { Moon, Sun } from "lucide-react";
 
