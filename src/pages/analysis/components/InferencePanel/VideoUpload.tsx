@@ -1,89 +1,127 @@
 import { useAnalysis } from "@/hooks/AnalysisContext"
-import { Progress } from "@radix-ui/react-progress"
-import { Camera } from "lucide-react"
+import { Upload, X, CheckCircle2 } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 
+const ANGLES = [
+    { key: "front" as const, label: "Front View" },
+    { key: "back" as const, label: "Back View" },
+    { key: "left" as const, label: "Left Side" },
+    { key: "right" as const, label: "Right Side" },
+]
 
-const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = Math.floor(seconds % 60)
-    return `${mins}:${secs.toString().padStart(2, "0")}`
+interface VideoQuadrantProps {
+    angle: (typeof ANGLES)[0]
+    video?: File
+    videoUrl?: string
+    onUpload: (file: File) => void
+    onRemove: () => void
 }
 
-export default function VideoUpload() {
-    const {
-        uploadedVideo, setUploadedVideo,
-        videoUrl, setVideoUrl,
-        videoDuration, setVideoDuration,
-        videoCurrentTime, setVideoCurrentTime,
-        setIsVideoPlaying, setIsAnalyzing
-    } = useAnalysis();
-
-    const handleVideoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+function VideoQuadrant({ angle, video, videoUrl, onUpload, onRemove }: VideoQuadrantProps) {
+    const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0]
         if (file && file.type.startsWith("video/")) {
-            setUploadedVideo(file)
-            const url = URL.createObjectURL(file)
-            setVideoUrl(url)
-            setIsAnalyzing(false)
+            onUpload(file)
         }
     }
 
-    return <>
-        {!uploadedVideo ? (
-            /* Video upload area */
-            <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
-                <div className="text-center text-gray-400">
-                    <label htmlFor="video-upload" className="cursor-pointer">
-                        <div className="border-2 border-dashed border-gray-600 rounded-lg p-8 hover:border-gray-500 transition-colors">
-                            <Camera className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                            <p className="text-lg mb-2">Upload Video for Analysis</p>
-                            <p className="text-sm">Drag and drop or click to select</p>
-                            <p className="text-xs mt-2 text-gray-500">Supports MP4, MOV, AVI formats</p>
-                        </div>
-                    </label>
+    return (
+        <div className="relative w-full h-full aspect-video bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden border-2 border-dashed border-gray-600 hover:border-gray-500 transition-colors flex items-center justify-center">
+            {!video ? (
+                <label htmlFor={`video-upload-${angle.key}`} className="cursor-pointer w-full h-full flex flex-col items-center justify-center text-gray-400 p-4">
+                    <Upload className="w-8 h-8 mb-2 opacity-50" />
+                    <p className="text-sm font-medium text-center">{angle.label}</p>
+                    <p className="text-xs text-center mt-1 opacity-75">Click to upload</p>
                     <input
-                        id="video-upload"
+                        id={`video-upload-${angle.key}`}
                         type="file"
                         accept="video/*"
-                        onChange={handleVideoUpload}
+                        onChange={handleFileUpload}
                         className="hidden"
                     />
-                </div>
-            </div>
-        ) : (
-            /* Video player */
-            <div className="relative w-full h-full">
-                <video
-                    src={videoUrl || undefined}
-                    className="w-full h-full object-contain"
-                    onLoadedMetadata={(e) => {
-                        const video = e.target as HTMLVideoElement
-                        setVideoDuration(video.duration)
-                    }}
-                    onTimeUpdate={(e) => {
-                        const video = e.target as HTMLVideoElement
-                        setVideoCurrentTime(video.currentTime)
-                    }}
-                    onPlay={() => setIsVideoPlaying(true)}
-                    onPause={() => setIsVideoPlaying(false)}
-                    controls={false}
-                />
-
-                {/* Video controls */}
-                <div className="absolute bottom-4 left-4 right-4 bg-black/70 text-white px-4 py-2 rounded-lg">
-                    <div className="flex items-center gap-4">
-                        <span className="text-sm font-medium">{uploadedVideo?.name}</span>
-                        <div className="flex-1 flex items-center gap-2">
-                            <span className="text-xs">{formatTime(videoCurrentTime)}</span>
-                            <Progress
-                                value={videoDuration > 0 ? (videoCurrentTime / videoDuration) * 100 : 0}
-                                className="flex-1 h-2"
-                            />
-                            <span className="text-xs">{formatTime(videoDuration)}</span>
+                </label>
+            ) : (
+                <div className="relative w-full h-full">
+                    <video src={videoUrl} className="w-full h-full object-cover" muted preload="metadata" />
+                    {/* Cancel button in top left */}
+                    <Button
+                        variant="destructive"
+                        size="icon"
+                        title="Remove Video"
+                        onClick={onRemove}
+                        className="absolute top-2 left-2 h-7 w-7 p-0 z-20 bg-black/60 hover:bg-red-600 border border-white/20 rounded-full"
+                        aria-label={`Remove ${angle.label} video`}
+                    >
+                        <X className="w-4 h-4" />
+                    </Button>
+                    {/* Overlay for filename */}
+                    <div className="absolute bottom-2 left-2 right-2 bg-black/60 rounded px-2 py-1 m-2">
+                        <p className="text-xs text-white truncate">{video.name}</p>
+                    </div>
+                    {/* Success indicator */}
+                    <div className="absolute top-2 right-2">
+                        <div className="w-6 h-6 bg-green-500/20 border-green-500 rounded-full flex items-center justify-center">
+                            <CheckCircle2 className="w-4 h-4 text-green-400" />
                         </div>
                     </div>
                 </div>
+            )}
+        </div>
+    )
+}
+
+export default function VideoUpload() {
+    const { uploadedVideos, setUploadedVideos, videoUrls, setVideoUrls, removeVideo, setIsAnalyzing } = useAnalysis()
+
+    const handleVideoUpload = (angle: "front" | "back" | "left" | "right", file: File) => {
+        const newVideos = { ...uploadedVideos, [angle]: file }
+        const url = URL.createObjectURL(file)
+        const newUrls = { ...videoUrls, [angle]: url }
+
+        setUploadedVideos(newVideos)
+        setVideoUrls(newUrls)
+        setIsAnalyzing(false)
+    }
+
+    const handleVideoRemove = (angle: "front" | "back" | "left" | "right") => {
+        removeVideo(angle)
+    }
+
+    const uploadedCount = Object.keys(uploadedVideos).length
+    const hasAnyVideo = uploadedCount > 0
+
+    return (
+        <div className="relative bg-gray-900 rounded-lg overflow-hidden py-4 px-2 h-full flex flex-col">
+            {/* Header */}
+            <div className="px-4 pt-4 z-10">
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="bg-black/60 text-white border-gray-600">
+                            {uploadedCount}/4 angles uploaded
+                        </Badge>
+                        {hasAnyVideo && (
+                            <Badge variant="secondary" className="bg-green-500/20 text-green-400 border-green-500">
+                                <CheckCircle2 className="w-3 h-3 mr-1" />
+                                Ready for analysis
+                            </Badge>
+                        )}
+                    </div>
+                </div>
             </div>
-        )}
-    </>
+            {/* 4 Quadrant Grid */}
+            <div className="flex-1 grid grid-cols-2 grid-rows-2 gap-4 p-4">
+                {ANGLES.map((angle) => (
+                    <VideoQuadrant
+                        key={angle.key}
+                        angle={angle}
+                        video={uploadedVideos[angle.key]}
+                        videoUrl={videoUrls[angle.key]}
+                        onUpload={(file) => handleVideoUpload(angle.key, file)}
+                        onRemove={() => handleVideoRemove(angle.key)}
+                    />
+                ))}
+            </div>
+        </div>
+    )
 }

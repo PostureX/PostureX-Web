@@ -1,6 +1,7 @@
 import { useRef, useEffect } from "react";
 import { Target, CameraOff } from "lucide-react";
 import { useAnalysis } from "@/hooks/AnalysisContext";
+import AnalysisOverlay from "./AnalysisOverlay";
 
 export default function LiveWebcam() {
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -12,7 +13,6 @@ export default function LiveWebcam() {
         let isMounted = true;
         const videoElement = videoRef.current;
 
-        // Helper to stop and clean up the current stream
         async function cleanupStream() {
             if (videoElement) {
                 videoElement.srcObject = null;
@@ -21,12 +21,10 @@ export default function LiveWebcam() {
                 streamRef.current.getTracks().forEach(track => track.stop());
                 streamRef.current = null;
             }
-            // Wait a tick to ensure hardware is released
             await new Promise(res => setTimeout(res, 100));
         }
 
         async function getWebcam() {
-            // Chain cleanup to avoid overlap
             cleanupPromiseRef.current = cleanupPromiseRef.current.then(cleanupStream);
             await cleanupPromiseRef.current;
 
@@ -72,31 +70,46 @@ export default function LiveWebcam() {
         };
     }, [isCameraOn, cameraDevices, cameraIndex, setCameraError]);
 
+    // Fallback UI for camera off
+    if (!isCameraOn) {
+        return (
+            <div className="relative bg-gray-900 rounded-lg overflow-hidden" style={{ aspectRatio: "16/9" }}>
+                <div className="absolute inset-0 flex items-center justify-center text-gray-400 bg-gradient-to-br from-gray-800 to-gray-900">
+                    <CameraOff className="w-16 h-16 mb-4 opacity-50" />
+                    <span className="ml-4 text-lg">Camera is Off</span>
+                </div>
+            </div>
+        );
+    }
+
     return (
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
-            <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                className="w-full h-full object-contain rounded-lg"
-            />
-            {/* Overlay for fallback or instructions if needed */}
-            {cameraError ? (
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <div className="relative z-10 flex flex-col items-center pointer-events-none">
-                        <CameraOff className="w-16 h-16 mx-auto mb-4 opacity-50 text-red-400" />
-                        <p className="text-lg text-red-400 font-semibold">No camera found</p>
-                        <p className="text-sm mt-2 text-gray-400">Please connect a camera and refresh the page.</p>
+        <div className="relative bg-gray-900 rounded-lg overflow-hidden" style={{ aspectRatio: "16/9" }}>
+            <AnalysisOverlay />
+            <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+                <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    className="w-full h-full object-contain rounded-lg"
+                />
+                {/* Overlay for fallback or instructions if needed */}
+                {cameraError ? (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                        <div className="relative z-10 flex flex-col items-center pointer-events-none">
+                            <CameraOff className="w-16 h-16 mx-auto mb-4 opacity-50 text-red-400" />
+                            <p className="text-lg text-red-400 font-semibold">No camera found</p>
+                            <p className="text-sm mt-2 text-gray-400">Please connect a camera and refresh the page.</p>
+                        </div>
                     </div>
-                </div>
-            ) : !isAnalyzing && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black opacity-80">
-                    <div className="relative z-10 flex flex-col items-center pointer-events-none">
-                        <Target className="w-16 h-16 mx-auto mb-4 opacity-50 text-gray-400" />
-                        <p className="text-sm mt-2 text-gray-400">Click "Start Analysis" to begin</p>
+                ) : !isAnalyzing && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black opacity-80">
+                        <div className="relative z-10 flex flex-col items-center pointer-events-none">
+                            <Target className="w-16 h-16 mx-auto mb-4 opacity-50 text-gray-400" />
+                            <p className="text-sm mt-2 text-gray-400">Click "Start Analysis" to begin</p>
+                        </div>
                     </div>
-                </div>
-            )}
+                )}
+            </div>
         </div>
     );
 }
