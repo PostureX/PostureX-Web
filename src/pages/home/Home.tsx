@@ -6,9 +6,8 @@ import PostureInsightsCarousel from "@/components/custom/PostureInsightsCarousel
 import UploadCard from "@/components/custom/UploadCard/UploadCard"
 import "./Home.css";
 import Slider from "@/components/custom/Slider/Slider";
-import { CalendarDays, ChevronDown, Plus, Moon, Sun, X } from "lucide-react";
+import { CalendarDays, ChevronDown, Plus, X } from "lucide-react";
 import { DateRange } from "react-day-picker";
-import { useTheme } from "@/hooks/ThemeContext";
 
 type UploadData = {
   created_at: string;
@@ -19,8 +18,6 @@ type UploadData = {
 };
 
 export default function HomePage() {
-  const [theme, setTheme] = useTheme();
-
   // Transform insights data to new format
   const insights: Array<{
     type: "critical" | "warning" | "good" | "info";
