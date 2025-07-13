@@ -44,6 +44,14 @@ export default function PostureInsightsCarousel({ insights, className }: Posture
   }, [])
 
   const maxSlides = Math.max(0, insights.length - cardsPerView)
+
+  // Clamp currentSlide if insights/cardsPerView change
+  useEffect(() => {
+    if (currentSlide >= maxSlides) {
+      setCurrentSlide(maxSlides - 1)
+    }
+  }, [maxSlides, currentSlide])
+
   const cardWidth = 100 / cardsPerView
 
   const nextSlide = () => {
