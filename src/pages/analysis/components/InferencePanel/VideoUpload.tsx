@@ -110,16 +110,21 @@ export default function VideoUpload() {
                 </div>
             </div>
             {/* 4 Quadrant Grid */}
-            <div className="flex-1 grid grid-cols-2 grid-rows-2 gap-4 p-4">
+            <div className="flex-1 flex flex-wrap gap-4 p-4 items-stretch justify-center">
                 {ANGLES.map((angle) => (
-                    <VideoQuadrant
+                    <div
                         key={angle.key}
-                        angle={angle}
-                        video={uploadedVideos[angle.key]}
-                        videoUrl={videoUrls[angle.key]}
-                        onUpload={(file) => handleVideoUpload(angle.key, file)}
-                        onRemove={() => handleVideoRemove(angle.key)}
-                    />
+                        className="flex-grow flex-shrink-0 basis-full sm:basis-[calc(50%-0.5rem)] max-w-full sm:max-w-[calc(50%-0.5rem)] min-w-[220px] h-[180px] sm:h-auto"
+                        style={{ minHeight: 0 }}
+                    >
+                        <VideoQuadrant
+                            angle={angle}
+                            video={uploadedVideos[angle.key]}
+                            videoUrl={videoUrls[angle.key]}
+                            onUpload={(file) => handleVideoUpload(angle.key, file)}
+                            onRemove={() => handleVideoRemove(angle.key)}
+                        />
+                    </div>
                 ))}
             </div>
         </div>
