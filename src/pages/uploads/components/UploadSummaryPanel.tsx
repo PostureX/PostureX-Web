@@ -10,21 +10,23 @@ import {
   Eye,
   Download,
   Share2,
-  RefreshCw,
   CheckCircle,
   AlertCircle,
   Clock,
   ChevronDown,
   ChevronRight,
+  Trash,
 } from "lucide-react"
 import { useUploadDetail } from "@/hooks/UploadDetailContext"
 import type { MeasurementFeedback, FeedbackMeasurements } from "@/types/api"
 import { useState } from "react"
 import { AnalysisResult, View } from "@/types/analysis"
+import DeleteAnalysisDialog from "./DeleteAnalysisDialog"
 
 export default function UploadSummaryPanel() {
-  const { analysis, analysisJsons, feedback, videoUrls, currentView, downloadReport, retryAnalysis } = useUploadDetail()
+  const { analysis, analysisJsons, feedback, videoUrls, currentView, downloadReport, deleteAnalysis, isDeleting } = useUploadDetail()
   const [expandedMetrics, setExpandedMetrics] = useState<Record<string, boolean>>({})
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false)
 
   if (!analysis) return null
 
@@ -225,10 +227,18 @@ export default function UploadSummaryPanel() {
             <Share2 className="w-3 h-3 mr-2" />
             Share Analysis
           </Button>
-          <Button className="w-full bg-transparent" variant="outline" size="sm" onClick={retryAnalysis}>
-            <RefreshCw className="w-3 h-3 mr-2" />
-            Reprocess
-          </Button>
+          <DeleteAnalysisDialog
+            open={openDeleteDialog}
+            setOpen={setOpenDeleteDialog}
+            onDelete={deleteAnalysis}
+            isDeleting={isDeleting}
+            trigger={
+              <Button className="w-full bg-transparent" variant="destructive" size="sm" onClick={() => setOpenDeleteDialog(true)} disabled={isDeleting}>
+                <Trash className="w-3 h-3 mr-2" />
+                {isDeleting ? "Deleting..." : "Delete Analysis"}
+              </Button>
+            }
+          />
         </CardContent>
       </Card>
     </div>

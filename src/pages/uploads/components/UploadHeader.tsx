@@ -5,6 +5,9 @@ import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, FileVideo, RefreshCw, Share2, Download, Trash2 } from "lucide-react"
 import { useUploadDetail } from "@/hooks/UploadDetailContext"
 import { useNavigate } from "react-router"
+import { SelectTrigger, SelectValue, SelectContent, SelectGroup, SelectLabel, SelectItem, Select } from "@/components/ui/select"
+import { useState } from "react"
+import DeleteAnalysisDialog from "./DeleteAnalysisDialog"
 
 const getStatusVariant = (status: string) => {
   switch (status) {
@@ -19,22 +22,11 @@ const getStatusVariant = (status: string) => {
   }
 }
 
-// const getStatusColor = (status: string) => {
-//   switch (status) {
-//     case "completed":
-//       return "text-green-600 dark:text-green-400"
-//     case "in_progress":
-//       return "text-blue-600 dark:text-blue-400"
-//     case "failed":
-//       return "text-red-600 dark:text-red-400"
-//     default:
-//       return "text-gray-600 dark:text-gray-400"
-//   }
-// }
-
 export default function UploadHeader() {
   const navigate = useNavigate()
   const { analysis, downloadReport, retryAnalysis, deleteAnalysis, isDeleting } = useUploadDetail()
+  const [model, setModel] = useState("cx");
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
   if (!analysis) return null
 
@@ -72,18 +64,40 @@ export default function UploadHeader() {
                 <Download className="w-4 h-4 mr-2" />
                 Download Report
               </Button>
-              <Button variant="outline" size="sm" onClick={deleteAnalysis} disabled={isDeleting}>
-                <Trash2 className="w-4 h-4 mr-2" />
-                {isDeleting ? "Deleting..." : "Delete"}
-              </Button>
             </>
           )}
           {analysis.status === "failed" && (
-            <Button variant="outline" size="sm" onClick={retryAnalysis}>
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Retry Analysis
-            </Button>
+            <>
+              <Select onValueChange={setModel} value={model}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select a Model" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Models</SelectLabel>
+                    <SelectItem value="cx">Cheng Xi's Model</SelectItem>
+                    <SelectItem value="gy">Guan Yu's Model</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+              <Button variant="outline" size="sm" onClick={retryAnalysis}>
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Retry Analysis
+              </Button>
+            </>
           )}
+          <DeleteAnalysisDialog
+            open={openDeleteDialog}
+            setOpen={setOpenDeleteDialog}
+            onDelete={deleteAnalysis}
+            isDeleting={isDeleting}
+            trigger={
+              <Button variant="destructive" size="sm" onClick={() => setOpenDeleteDialog(true)} disabled={isDeleting}>
+                <Trash2 className="w-4 h-4 mr-2" />
+                {isDeleting ? "Deleting..." : "Delete"}
+              </Button>
+            }
+          />
         </div>
       </div>
     </div>

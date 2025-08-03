@@ -167,8 +167,8 @@ export function UploadDetailProvider({ id, children }: { id: string; children: R
     isPending: isRetrying,
     error: retryError,
   } = useMutation({
-    mutationFn: async () => {
-      const res = await api.post(`/analysis/retry/${id}`);
+    mutationFn: async (model) => {
+      const res = await api.post(`/analysis/retry/${id}`, { model });
       return res.data;
     },
     onSuccess: () => {
