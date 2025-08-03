@@ -15,8 +15,8 @@ export default function Header() {
     return (
         <nav className="bg-card shadow-lg sticky top-0 z-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex justify-between items-center h-20">
-                    {/* Logo */}
+                <div className="flex justify-end items-center h-20">
+                    {/* Center: Logo */}
                     <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
                         <Logo className="h-15" />
                     </div>
