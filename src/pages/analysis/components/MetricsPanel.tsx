@@ -45,7 +45,7 @@ const getStatusIcon = (status: string) => {
 }
 
 // Example: assign status based on value (customize as needed)
-const getMetricStatus = (key: string, value: number) => {
+const getMetricStatus = (value: number) => {
   if (typeof value === "string") return "good"
   if (value >= 90) return "excellent"
   if (value >= 80) return "good"
@@ -69,7 +69,7 @@ export default function MetricsPanel() {
       key,
       label: metricLabels[key] || key,
       value: typeof value === "number" ? value : Number(value),
-      status: getMetricStatus(key, typeof value === "number" ? value : Number(value)),
+      status: getMetricStatus(typeof value === "number" ? value : Number(value)),
     }))
   } else if (Array.isArray(postureMetrics)) {
     metrics = postureMetrics.map((metric: PostureMetric) => {
@@ -79,7 +79,7 @@ export default function MetricsPanel() {
         key,
         label: metricLabels[key] || key,
         value,
-        status: getMetricStatus(key, value),
+        status: getMetricStatus(value),
       }
     })
   }
