@@ -39,6 +39,9 @@ export default function UploadHeader() {
           </Button>
           <div className="space-y-2">
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Analysis #{analysis.id}</h1>
+            <Badge variant="secondary" className="text-sm">
+              Model Used - <span className="font-semibold">{analysis.model_name}</span>
+            </Badge>
             <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
               <div className="flex items-center gap-2">
                 <FileVideo className="w-4 h-4" />

@@ -33,6 +33,7 @@ export interface RawAnalysisDetailResponse {
   analysis_json_urls: Partial<Record<View, string>>;
   feedback_json_url: string;
   uploads: Partial<Record<View, string>>;
+  model_name: string;
   created_at: string;
 }
 
