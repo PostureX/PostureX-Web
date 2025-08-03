@@ -1,71 +1,65 @@
-import { createContext, useContext, ReactNode, useEffect } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useNavigate, useLocation } from 'react-router';
+import { createContext, useContext, ReactNode } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router';
+import { useCookie } from './Cookies';
+import api from "@/api/api";
 
-interface AuthContextType {
-    user: User | null;
-    login: (username: string, password: string) => Promise<void>;
-    logout: () => void;
-    loading: boolean;
-}
-
-interface User {
-    id: string;
-    username: string;
-    isAdmin?: boolean;
-}
+import { AuthContextType, User } from "@/types/auth";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const fetchUser = async (): Promise<User | null> => {
-    const storedUser = localStorage.getItem('authUser');
-    if (!storedUser) return null;
-    try {
-        const parsed = JSON.parse(storedUser);
-        if (parsed && typeof parsed.id === 'string' && typeof parsed.username === 'string') {
-            return parsed as User;
+const fetchUser = async (getCookie: (name: string) => string | null): Promise<User | null> => {
+    const userCookie = getCookie('authUser');
+    if (userCookie) {
+        try {
+            const parsed = JSON.parse(userCookie);
+            if (parsed && typeof parsed.id === 'string' && typeof parsed.username === 'string') {
+                return parsed as User;
+            }
+        } catch {
+            // fall through to fetch from backend
         }
-        return null;
-    } catch {
-        return null;
     }
-};
-
-const fakeLogin = async (username: string, password: string): Promise<User> => {
-    await new Promise((res) => setTimeout(res, 500));
-    return { id: '1', username };
+    // If no cookie, try to fetch from backend (if session/cookie is valid)
+    try {
+        const res = await api.get("/auth/profile");
+        if (res.data && res.data.user) {
+            // Optionally set the cookie for future reloads
+            document.cookie = `authUser=${encodeURIComponent(JSON.stringify(res.data.user))}; path=/`;
+            return res.data.user as User;
+        }
+    } catch {
+        // Not authenticated or error
+    }
+    return null;
 };
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const navigate = useNavigate();
-    const location = useLocation();
     const queryClient = useQueryClient();
+    const { get: getCookie, remove: removeCookie } = useCookie();
 
     const { data: user, isLoading: loading } = useQuery({
         queryKey: ['authUser'],
-        queryFn: fetchUser,
+        queryFn: () => fetchUser(getCookie),
     });
 
-    const loginMutation = useMutation({
-        mutationFn: ({ username, password }: { username: string; password: string }) => fakeLogin(username, password),
-        onSuccess: (user) => {
-            localStorage.setItem('authUser', JSON.stringify(user));
-            queryClient.setQueryData(['authUser'], user);
-            navigate('/dashboard'); // Redirect to dashboard after login
-        },
-    });
-
-    const logout = () => {
-        localStorage.removeItem('authUser');
+    // Logout function using cookies
+    const logout = async () => {
+        removeCookie('authUser');
+        removeCookie('authToken');
         queryClient.setQueryData(['authUser'], null);
-    };
-
-    const login = async (username: string, password: string) => {
-        await loginMutation.mutateAsync({ username, password });
+        navigate('/');
     };
 
     return (
-        <AuthContext.Provider value={{ user: user ?? null, login, logout, loading: loading || loginMutation.status === 'pending' }}>
+        <AuthContext.Provider
+            value={{
+                user: user ?? null,
+                logout,
+                loading,
+            }}
+        >
             {children}
         </AuthContext.Provider>
     );

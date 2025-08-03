@@ -1,12 +1,13 @@
 import { useAuth } from "@/hooks/AuthContext";
+import LoadingPage from "@/pages/loading/Loading";
 import { Navigate, Outlet } from "react-router";
 
 export default function GuestRoute() {
   const { user, loading } = useAuth();
 
   if (loading) {
-    // You can return a spinner or null while loading
-    return null;
+    // Show a spinner or skeleton here
+    return <LoadingPage />;
   }
 
   return user ? <Navigate to="/dashboard" replace /> : <Outlet />;

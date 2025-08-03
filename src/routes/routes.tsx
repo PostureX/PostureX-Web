@@ -6,9 +6,17 @@ import ProtectedRoute from "./ProtectedRoute";
 import { AuthProvider } from "@/hooks/AuthContext";
 import { AnalysisProvider } from "@/hooks/AnalysisContext";
 import Analysis from "@/pages/analysis/Analysis";
-import NotFound from "@/pages/404/notFound";
 import GuestRoute from "./GuestRoute";
-import VideoUpload from "@/pages/analysis/components/InferencePanel/VideoUpload";
+import NotFound from "@/pages/404/NotFound";
+import UploadDetailsPage from "@/pages/uploads/Uploads";
+
+export const routeNames = {
+  HOME: "/dashboard",
+  LANDING: "/",
+  ANALYSIS: "/analysis",
+  LOGIN: "/login",
+  UPLOADS: "/uploads/:id",
+};
 
 export const router = createBrowserRouter([
   {
@@ -19,7 +27,7 @@ export const router = createBrowserRouter([
         element: <GuestRoute />,
         children: [
           {
-            path: "/",
+            path: routeNames.LANDING,
             Component: Landing,
           },
         ],
@@ -31,14 +39,16 @@ export const router = createBrowserRouter([
             Component: MainLayout,
             children: [
               {
-                path: "/dashboard",
+                path: routeNames.HOME,
                 Component: HomePage,
-                id: "dashboard",
               },
               {
-                path: "/analysis",
+                path: routeNames.ANALYSIS,
                 element: <AnalysisProvider><Analysis /></AnalysisProvider>,
-                id: "analysis",
+              },
+              {
+                path: routeNames.UPLOADS,
+                element: <UploadDetailsPage />
               }
             ],
           },

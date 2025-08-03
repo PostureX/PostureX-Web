@@ -1,8 +1,19 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { useAnalysis } from "@/hooks/AnalysisContext"
-import { Target, AlertTriangle, CheckCircle, Grid } from "lucide-react"
+import { Target, AlertTriangle, CheckCircle } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
+import { PostureMetric } from "@/types"
+
+const metricLabels: Record<string, string> = {
+  knee_angle: "Knee Angle",
+  head_tilt: "Head Tilt",
+  arm_angle: "Arm Angle",
+  arm_bent_angle: "Arm Bent Angle",
+  leg_spread: "Leg Spread",
+  back_angle: "Back Angle",
+  foot_to_shoulder_offset: "Foot to Shoulder Offset",
+}
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -33,97 +44,124 @@ const getStatusIcon = (status: string) => {
   }
 }
 
+// Example: assign status based on value (customize as needed)
+const getMetricStatus = (key: string, value: number) => {
+  if (typeof value === "string") return "good"
+  if (value >= 90) return "excellent"
+  if (value >= 80) return "good"
+  if (value >= 60) return "warning"
+  return "poor"
+}
+
 export default function MetricsPanel() {
-  const { currentScore, postureMetrics, analysisMode, uploadedVideos } = useAnalysis()
+  const { postureMetrics, analysisMode, rawScores } = useAnalysis()
 
-  const uploadedAngles = Object.keys(uploadedVideos)
-  const uploadedCount = uploadedAngles.length
+  // If rawScores is an object (not null/array), convert to array of metric objects
+  let metrics: {
+    key: string
+    label: string
+    value: number
+    status: string
+  }[] = []
 
-  return (
-    <div className="space-y-6">
-      {/* Multi-Angle Status - only show in upload mode */}
-      {analysisMode === "upload" && (
+  if (rawScores && typeof rawScores === "object" && !Array.isArray(rawScores)) {
+    metrics = Object.entries(rawScores).map(([key, value]) => ({
+      key,
+      label: metricLabels[key] || key,
+      value: typeof value === "number" ? value : Number(value),
+      status: getMetricStatus(key, typeof value === "number" ? value : Number(value)),
+    }))
+  } else if (Array.isArray(postureMetrics)) {
+    metrics = postureMetrics.map((metric: PostureMetric) => {
+      const key = metric.key || metric.name
+      const value = metric.value
+      return {
+        key,
+        label: metricLabels[key] || key,
+        value,
+        status: getMetricStatus(key, value),
+      }
+    })
+  }
+
+  if (analysisMode === "upload") {
+    return null
+  }
+
+  if (!metrics.length) {
+    return (
+      <div className="space-y-6">
         <Card variant="noHighlight">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Grid className="w-5 h-5" />
-              Analysis Coverage
+              <Target className="w-5 h-5" />
+              No Metrics Available
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {/* Individual Angle Status */}
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { key: "front", label: "Front" },
-                  { key: "back", label: "Back" },
-                  { key: "left", label: "Left" },
-                  { key: "right", label: "Right" },
-                ].map((angle) => {
-                  const hasVideo = uploadedVideos[angle.key as keyof typeof uploadedVideos]
-
-                  return (
-                    <div
-                      key={angle.key}
-                      className={`p-2 rounded border text-center transition-colors ${hasVideo
-                          ? "border-green-500 bg-green-50 dark:bg-green-950/20"
-                          : "border-gray-200 bg-gray-50 dark:bg-gray-800/20 dark:border-gray-700"
-                        }`}
-                    >
-                      <div className="text-xs font-medium">{angle.label}</div>
-                      <div className="text-xs text-muted-foreground mt-1">
-                        {hasVideo ? (
-                          <div className="flex items-center justify-center gap-1">
-                            <CheckCircle className="w-3 h-3 text-green-600" />
-                            Uploaded
-                          </div>
-                        ) : (
-                          "Not uploaded"
-                        )}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
+            <div className="text-center text-gray-500">No analysis data to display.</div>
           </CardContent>
         </Card>
-      )}
+      </div>
+    )
+  }
 
+  // Calculate a simple average score for display
+  const numericValues = metrics
+    .map((m) => (typeof m.value === "number" ? m.value : undefined))
+    .filter((v) => typeof v === "number") as number[]
+  const score =
+    numericValues.length > 0
+      ? Math.round(
+          numericValues.reduce((sum, v) => sum + (typeof v === "number" ? v : 0), 0) / numericValues.length
+        )
+      : 0
+
+  return (
+    <div className="space-y-6">
       {/* Current Score */}
       <Card variant="noHighlight">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Target className="w-5 h-5" />
             Overall Score
-            {analysisMode === "upload" && uploadedCount > 0 && (
-              <Badge variant="outline" className="ml-2">
-                {uploadedCount} angle{uploadedCount !== 1 ? "s" : ""}
-              </Badge>
-            )}
+            <Badge variant="outline" className="ml-2">
+              {metrics.length} metric{metrics.length !== 1 ? "s" : ""}
+            </Badge>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center">
-            <div className="text-4xl font-bold text-blue-600 mb-2">{currentScore}%</div>
-            <Progress value={currentScore} className="mb-4" />
-            <Badge variant={currentScore >= 90 ? "default" : currentScore >= 70 ? "secondary" : "destructive"}>
-              {currentScore >= 90 ? "Excellent" : currentScore >= 70 ? "Good" : "Needs Improvement"}
+            <div className="text-4xl font-bold text-blue-600 mb-2">{score}%</div>
+            <Progress value={score} className="mb-4" />
+            <Badge variant={score >= 90 ? "default" : score >= 70 ? "secondary" : "destructive"}>
+              {score >= 90 ? "Excellent" : score >= 70 ? "Good" : "Needs Improvement"}
             </Badge>
           </div>
           <p className="font-semibold mt-6 text-md text-gray-600">
-            {analysisMode === "upload" ? "Multi-Angle Analysis" : "Real-Time Analysis"}
+            Real-Time Analysis
           </p>
-          {postureMetrics.map((metric, index) => (
+          {metrics.map((metric, index) => (
             <div key={index} className="mt-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="font-medium text-sm">{metric.name}</span>
+                <span className="font-medium text-sm">{metric.label}</span>
                 {getStatusIcon(metric.status)}
               </div>
-              <div className="flex items-center gap-2">
-                <Progress value={metric.value} className="flex-1" />
-                <span className={`text-sm font-medium ${getStatusColor(metric.status)}`}>{metric.value}%</span>
-              </div>
+                <div className="flex items-center gap-2">
+                <Progress
+                  value={
+                  typeof metric.value === "number"
+                    ? Math.round(metric.value)
+                    : 100
+                  }
+                  className="flex-1"
+                />
+                <span className={`text-sm font-medium ${getStatusColor(metric.status)}`}>
+                  {typeof metric.value === "number"
+                  ? `${Math.round(metric.value)}%`
+                  : String(metric.value)}
+                </span>
+                </div>
             </div>
           ))}
         </CardContent>

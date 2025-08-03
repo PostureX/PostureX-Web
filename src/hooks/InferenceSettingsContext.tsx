@@ -1,17 +1,5 @@
 import { createContext, useContext, useState, ReactNode } from "react";
-
-interface InferenceSettingsContextType {
-    showFace: boolean;
-    setShowFace: (v: boolean) => void;
-    showLeftHand: boolean;
-    setShowLeftHand: (v: boolean) => void;
-    showRightHand: boolean;
-    setShowRightHand: (v: boolean) => void;
-    showUpperBody: boolean;
-    setShowUpperBody: (v: boolean) => void;
-    showLowerBody: boolean;
-    setShowLowerBody: (v: boolean) => void;
-}
+import { InferenceSettingsContextType } from "@/types/inference-settings";
 
 const InferenceSettingsContext = createContext<InferenceSettingsContextType | undefined>(undefined);
 

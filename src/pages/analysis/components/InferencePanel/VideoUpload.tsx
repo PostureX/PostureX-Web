@@ -1,7 +1,7 @@
-import { useAnalysis } from "@/hooks/AnalysisContext"
 import { Upload, X, CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { useUpload } from "@/hooks/UploadContext"
 
 const ANGLES = [
     { key: "front" as const, label: "Front View" },
@@ -72,7 +72,7 @@ function VideoQuadrant({ angle, video, videoUrl, onUpload, onRemove }: VideoQuad
 }
 
 export default function VideoUpload() {
-    const { uploadedVideos, setUploadedVideos, videoUrls, setVideoUrls, removeVideo, setIsAnalyzing } = useAnalysis()
+    const { uploadedVideos, setUploadedVideos, videoUrls, setVideoUrls, removeVideo } = useUpload()
 
     const handleVideoUpload = (angle: "front" | "back" | "left" | "right", file: File) => {
         const newVideos = { ...uploadedVideos, [angle]: file }
@@ -81,7 +81,6 @@ export default function VideoUpload() {
 
         setUploadedVideos(newVideos)
         setVideoUrls(newUrls)
-        setIsAnalyzing(false)
     }
 
     const handleVideoRemove = (angle: "front" | "back" | "left" | "right") => {

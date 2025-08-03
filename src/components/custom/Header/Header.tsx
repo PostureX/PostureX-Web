@@ -1,14 +1,16 @@
-import { useAuth } from "@/hooks/AuthContext";
-import ThemeToggle from "../ThemeToggle";
-import { Button } from "@/components/ui/button";
-import { Menu, X, User } from "lucide-react";
+import { useState } from "react"
+import { useAuth } from "@/hooks/AuthContext"
+import ThemeToggle from "../ThemeToggle"
+import { Button } from "@/components/ui/button"
+import { Menu, X, User } from "lucide-react"
 import Logo from "@/components/custom/Logo"
-import { useState } from "react";
-import "./Header.css";
+import ProfileModal from "@/components/custom/ProfileModal/ProfileModal"
+import "./Header.css"
 
 export default function Header() {
-    const { logout } = useAuth();
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const { logout } = useAuth()
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+    const [profileOpen, setProfileOpen] = useState(false)
 
     return (
         <nav className="bg-card shadow-lg sticky top-0 z-50">
@@ -16,9 +18,9 @@ export default function Header() {
                 <div className="flex justify-between items-center h-20">
                     {/* Left: SPF Crest */}
                     <div className="flex items-center bg-[#f7f7f7] rounded-full px-4 py-2">
-                        <img    
-                            className="w-[120px] sm:w-[100px] md:w-[80px] xl:w-[6vw] h-auto" 
-                            src="/images/spf_crest_with_tagline.png" 
+                        <img
+                            className="w-[120px] sm:w-[100px] md:w-[80px] xl:w-[6vw] h-auto"
+                            src="/images/spf_crest_with_tagline.png"
                             alt="SPF Crest"
                         />
                     </div>
@@ -36,9 +38,14 @@ export default function Header() {
                         <a href="/analysis" className="text-muted-foreground hover:text-foreground transition-colors font-semibold">
                             Analysis
                         </a>
-                        <a href="/profile" className="text-muted-foreground hover:text-foreground transition-colors font-semibold">
+                        <button
+                            type="button"
+                            className="text-muted-foreground hover:text-foreground transition-colors font-semibold flex items-center gap-2"
+                            onClick={() => setProfileOpen(true)}
+                        >
+                            <User className="w-4 h-4" />
                             Profile
-                        </a>
+                        </button>
                         <Button variant="ghost" onClick={logout} className="text-muted-foreground hover:text-foreground">
                             Logout
                         </Button>
@@ -63,10 +70,14 @@ export default function Header() {
                             <a href="/analysis" className="text-muted-foreground hover:text-foreground transition-colors font-semibold">
                                 Analysis
                             </a>
-                            <a href="/profile" className="text-muted-foreground hover:text-foreground transition-colors font-semibold flex items-center gap-2">
+                            <button
+                                type="button"
+                                className="text-muted-foreground hover:text-foreground transition-colors font-semibold flex items-center gap-2"
+                                onClick={() => setProfileOpen(true)}
+                            >
                                 <User className="w-4 h-4" />
                                 Profile
-                            </a>
+                            </button>
                             <div className="flex flex-col space-y-2 pt-4 border-t border-border">
                                 <Button variant="ghost" onClick={logout} className="justify-start text-muted-foreground hover:text-foreground">
                                     Logout
@@ -77,6 +88,7 @@ export default function Header() {
                     </div>
                 )}
             </div>
+            <ProfileModal open={profileOpen} onOpenChange={setProfileOpen} />
         </nav>
-    );
+    )
 }

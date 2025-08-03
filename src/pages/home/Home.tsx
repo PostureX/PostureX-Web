@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
@@ -6,8 +7,11 @@ import PostureInsightsCarousel from "@/components/custom/PostureInsightsCarousel
 import UploadCard from "@/components/custom/UploadCard/UploadCard"
 import "./Home.css";
 import Slider from "@/components/custom/Slider/Slider";
-import { CalendarDays, ChevronDown, Plus, X } from "lucide-react";
+import { CalendarDays, ChevronDown, Plus, X, AlertTriangle } from "lucide-react";
 import { DateRange } from "react-day-picker";
+import api from "@/api/api"; // <-- use axios instance
+import { useNavigate } from "react-router";
+import { routeNames } from "@/routes/routes";
 
 type UploadData = {
   created_at: string;
@@ -15,9 +19,12 @@ type UploadData = {
   text: string;
   user_id: number;
   video_url: string;
+  status?: string; // <-- add status
 };
 
 export default function HomePage() {
+  const navigate = useNavigate();
+
   // Transform insights data to new format
   const insights: Array<{
     type: "critical" | "warning" | "good" | "info";
@@ -111,37 +118,19 @@ export default function HomePage() {
     };
   }, [showCalendar]);
 
-  // Fetch data from API
-  const [uploadData, setUploadData] = useState<UploadData[] | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const apiURL = "http://localhost:5000"
-
-  useEffect(() => {
-    setLoading(true);
-    Promise.all([
-      fetch(`${apiURL}/api/analysis`,{
-        method: "GET",
-        credentials: 'include'
-      }).then(res => {
-        if (!res.ok) throw new Error("API error for upload");
-        return res.json();
-      }),
-      // fetch("/api/insights").then(res => {
-      //   if (!res.ok) throw new Error("API error for insights");
-      //   return res.json();
-      // }),
-    ])
-      .then(([upload]) => {
-        setUploadData(upload.data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message);
-        setLoading(false);
-      });
-  }, []);
+  // Fetch uploads using react-query and axios
+  const {
+    data: uploadData,
+    isLoading: uploadsLoading,
+    error: uploadsError,
+  } = useQuery<UploadData[], Error>({
+    refetchInterval: 5000,
+    queryKey: ["uploads"],
+    queryFn: async () => {
+      const res = await api.get("/analysis/list");
+      return res.data as UploadData[];
+    },
+  });
 
   return (
     <div className="min-h-screen w-full bg-background">
@@ -210,30 +199,54 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* New Analysis Card */}
-            <Card className="bg-muted border-dashed border-2 border-border hover:border-primary/50 transition-colors cursor-pointer">
-              <CardContent className="p-8 flex flex-col items-center justify-center h-64">
-                <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mb-4">
-                  <Plus className="w-8 h-8 text-primary-foreground" />
-                </div>
-                <h3 className="text-xl font-semibold text-primary">New Analysis</h3>
-              </CardContent>
-            </Card>
-
-            {/* Conditional rendering based on loading state */}
-            {loading ? (
+            <button
+              onClick={() => navigate(routeNames.ANALYSIS)}
+              className="group w-full text-left"
+              style={{ minWidth: 0 }}
+            >
+              <Card className="overflow-hidden upload-container bg-muted border-dashed border-2 border-border hover:border-primary/50 transition-colors cursor-pointer h-full flex flex-col">
+                <CardContent className="p-4 flex flex-col flex-1 items-center justify-center">
+                  <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mb-4">
+                    <Plus className="w-8 h-8 text-primary-foreground" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-primary text-center">New Analysis</h3>
+                </CardContent>
+              </Card>
+            </button>
+            {/* Conditional rendering based on react-query */}
+            {uploadsLoading ? (
               <div className="loading-spinner text-foreground">Loading...</div>
-            ) : error ? (
-              <div className="error-message text-destructive">{error}</div>
+            ) : uploadsError ? (
+              <Card variant="noHighlight" className="col-span-1 md:col-span-2 lg:col-span-3 bg-destructive/10 border-destructive/30 border flex items-center justify-center h-64 shadow-sm">
+                <CardContent className="flex flex-col items-center justify-center">
+                  <AlertTriangle className="w-10 h-10 text-destructive mb-3" />
+                  <div className="text-lg font-semibold text-destructive mb-1">Failed to load uploads</div>
+                  <div className="text-sm text-destructive/80 mb-4">{uploadsError.message}</div>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => window.location.reload()}
+                  >
+                    Retry
+                  </Button>
+                </CardContent>
+              </Card>
             ) : (
-              uploadData && uploadData.map((upload: UploadData) => (
-                <UploadCard 
-                  key={upload.id} 
-                  id={upload.id} 
+              uploadData &&
+              uploadData.map((upload: UploadData) => (
+                <UploadCard
+                  key={upload.id}
+                  id={upload.id}
                   date={upload.created_at}
-                  onViewAnalysis={() => {
-                    // Handle view analysis action
-                    console.log(`View analysis for upload ${upload.id}`);
-                  }}
+                  status={upload.status}
+                  onViewAnalysis={
+                    upload.status === "failed"
+                      ? undefined
+                      : () => {
+                          // Handle view analysis action
+                          console.log(`View analysis for upload ${upload.id}`);
+                        }
+                  }
                 />
               ))
             )}
@@ -241,5 +254,5 @@ export default function HomePage() {
         </div>
       </div>
     </div>
-  )
-};
+  );
+}

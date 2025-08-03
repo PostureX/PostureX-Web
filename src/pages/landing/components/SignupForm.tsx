@@ -4,33 +4,91 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { User, Mail, Lock, Eye, EyeOff } from "lucide-react"
+import { User, Mail, AlertCircle } from "lucide-react"
 import { useState } from "react"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useNavigate } from "react-router"
+import api from "@/api/api"
+import { Alert, AlertTitle } from "@/components/ui/alert"
+import { useCookie } from "@/hooks/Cookies";
+import SignupPasswordInput from "@/components/custom/PasswordInput"
+import { AxiosError } from "axios"
 
+// Password requirements for validation
+const passwordRequirements = [
+  { regex: /.{8,}/, text: "At least 8 characters" },
+  { regex: /[0-9]/, text: "At least 1 number" },
+  { regex: /[a-z]/, text: "At least 1 lowercase letter" },
+  { regex: /[A-Z]/, text: "At least 1 uppercase letter" },
+];
+
+// Zod schema for password requirements
 const signupSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  confirmPassword: z.string()
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords do not match",
-  path: ["confirmPassword"]
-})
+});
 
 type SignupFormValues = z.infer<typeof signupSchema>
 
+function checkPasswordRequirements(password: string) {
+  return passwordRequirements.every((req) => req.regex.test(password));
+}
+
 export default function SignupForm() {
-  const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [password, setPassword] = useState("")
   const { register, handleSubmit, formState: { errors } } = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
-    defaultValues: { name: "", email: "", password: "", confirmPassword: "" }
+    defaultValues: { name: "", email: "" }
   })
+  const queryClient = useQueryClient()
+  const navigate = useNavigate()
+  const { set: setCookie } = useCookie();
 
-  const onSubmit = async () => {
+  const registerMutation = useMutation({
+    mutationFn: async ({ email, name, password }: { email: string; name: string; password: string }) => {
+      const res = await api.post("/auth/register", { email, name, password });
+      return res.data;
+    },
+    onSuccess: (data) => {
+      setCookie('authUser', JSON.stringify(data.user));
+      setCookie('access_token_cookie', data.token); // if you use a token
+      queryClient.setQueryData(['authUser'], data.user);
+      navigate('/dashboard');
+    },
+    onError: (error: Error) => {
+      if (error instanceof AxiosError) {
+        switch (error.response?.status) {
+          case 400:
+            setError("Invalid input. Please check your details and try again.");
+            break;
+          case 409:
+            setError("Email already exists. Please use a different email.");
+            break;
+          default:
+            setError("An unexpected error occurred. Please try again later.");
+            break;
+        }
+      }
+    },
+  });
+
+  const onSubmit = async (data: SignupFormValues) => {
     setIsLoading(true)
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-    setIsLoading(false)
+    setError(null)
+    // Check password requirements before proceeding
+    if (!checkPasswordRequirements(password)) {
+      setIsLoading(false)
+      return;
+    }
+    try {
+      await registerMutation.mutateAsync({ email: data.email, name: data.name, password: password });
+    } catch {
+      // error handled in onError
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -68,49 +126,18 @@ export default function SignupForm() {
         )}
       </div>
       <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
-        <div className="relative mb-0">
-          <Lock className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-          <Input
-            id="password"
-            type={showPassword ? "text" : "password"}
-            placeholder="Enter your password"
-            className="pl-10 pr-10"
-            {...register("password")}
-          />
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="absolute right-0 top-0 h-full px-3"
-            style={{ top: 0, bottom: 0, height: "auto" }}
-            onClick={() => setShowPassword(!showPassword)}
-            tabIndex={-1}
-          >
-            {showPassword ? <EyeOff className="w-2 h-2" /> : <Eye className="w-2 h-2" />}
-          </Button>
-        </div>
-        {errors.password && (
-          <span className="text-xs text-red-500 ml-2">{errors.password.message as string}</span>
-        )}
+        <SignupPasswordInput
+          value={password}
+          onChange={setPassword}
+        />
       </div>
-      <div className="space-y-2">
-        <Label htmlFor="confirmPassword">Confirm Password</Label>
-        <div className="relative mb-0">
-          <Lock className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-          <Input
-            id="confirmPassword"
-            type="password"
-            placeholder="Confirm your password"
-            className="pl-10"
-            {...register("confirmPassword")}
-          />
-        </div>
-        {errors.confirmPassword && (
-          <span className="text-xs text-red-500 ml-2">{errors.confirmPassword.message as string}</span>
-        )}
-      </div>
-      <Button type="submit" className="w-full" disabled={isLoading}>
+      {error && (
+        <Alert variant="authError">
+          <AlertCircle />
+          <AlertTitle>{error}</AlertTitle>
+        </Alert>
+      )}
+      <Button type="submit" className="w-full" disabled={isLoading || !checkPasswordRequirements(password)}>
         {isLoading ? (
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

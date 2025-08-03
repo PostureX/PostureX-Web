@@ -3,10 +3,14 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { useAnalysis } from "@/hooks/AnalysisContext"
-import { Target, Camera, Square, Play, CameraOff, SwitchCamera } from "lucide-react"
+import { useUpload } from "@/hooks/UploadContext"
+import { Target, Camera, Square, Play, CameraOff, SwitchCamera, Upload } from "lucide-react"
 import LiveWebcam from "./LiveWebcam"
 import VideoUpload from "./VideoUpload"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useMutation } from "@tanstack/react-query"
+import { useState } from "react"
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export default function InferencePanel() {
     const {
@@ -14,7 +18,6 @@ export default function InferencePanel() {
         setAnalysisMode,
         setIsAnalyzing,
         isAnalyzing,
-        setIsVideoPlaying,
         isCameraOn,
         setIsCameraOn,
         cameraDevices,
@@ -22,30 +25,41 @@ export default function InferencePanel() {
         setCameraIndex,
         fetchDevices,
         cameraError,
-        uploadedVideos,
-        setUploadedVideos,
-        setVideoUrls,
     } = useAnalysis()
 
-    const handleMultiVideoAnalysis = () => {
-        if (isAnalyzing) {
-            // Stop analysis
-            setIsAnalyzing(false)
-            setIsVideoPlaying(false)
-        } else {
-            // Start analysis for all uploaded videos
-            setIsAnalyzing(true)
-            setIsVideoPlaying(true)
-            // Here you would implement logic to analyze all uploaded videos simultaneously
-            console.log("Analyzing videos:", Object.keys(uploadedVideos))
+    const { uploadedVideos, uploadVideos, uploads, setUploadedVideos, setUploads, setVideoUrls } = useUpload();
+
+    const [model, setModel] = useState("cx")
+
+    // React Query mutation for upload
+    const uploadMutation = useMutation({
+        mutationFn: async () => {
+            const sessionId = new Date().toLocaleString().replace(/[^\dA-Za-z]/g, "_")
+            return uploadVideos({
+                files: uploadedVideos,
+                sessionId,
+                model,
+            })
+        },
+        onSuccess: () => {
+            // wait 1 second before resetting
+            setTimeout(() => {
+                setUploadedVideos({});
+                setUploads([]);
+                setVideoUrls({});
+            }, 1000);
         }
+    })
+
+    const handleUpload = () => {
+        uploadMutation.mutate()
     }
 
-    const hasAnyVideo = Object.keys(uploadedVideos).length > 0
-    const uploadedCount = Object.keys(uploadedVideos).length
+    // Check if any upload is in progress
+    const isUploading = uploads.some(u => u.status === "uploading")
 
     return (
-        <div className="lg:col-span-2">
+        <div className={analysisMode == "live" ? "lg:col-span-2" : "lg:col-span-3"}>
             <Card variant="noHighlight">
                 <CardHeader>
                     <div className="flex items-center justify-between">
@@ -54,39 +68,46 @@ export default function InferencePanel() {
                             {analysisMode === "live" ? "Live Camera Feed" : "Multi-Angle Video Analysis"}
                         </CardTitle>
                         <div className="flex items-center gap-2">
-                            {analysisMode === "live" && isCameraOn && !cameraError ? (
-                                <Button
-                                    variant={isAnalyzing ? "destructive" : "default"}
-                                    size="sm"
-                                    onClick={() => setIsAnalyzing(!isAnalyzing)}
-                                >
-                                    {isAnalyzing ? (
-                                        <>
-                                            <Square className="w-4 h-4 mr-2" />
-                                            Stop
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Play className="w-4 h-4 mr-2" />
-                                            Start Analysis
-                                        </>
-                                    )}
-                                </Button>
-                            ) : hasAnyVideo ? (
-                                <Button variant={isAnalyzing ? "destructive" : "default"} size="sm" onClick={handleMultiVideoAnalysis}>
-                                    {isAnalyzing ? (
-                                        <>
-                                            <Square className="w-4 h-4 mr-2" />
-                                            Stop Analysis
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Play className="w-4 h-4 mr-2" />
-                                            Analyze All ({uploadedCount} angle{uploadedCount !== 1 ? "s" : ""})
-                                        </>
-                                    )}
-                                </Button>
-                            ) : null}
+                            <div className="flex items-center gap-2">
+                                {analysisMode === "live" && isCameraOn && !cameraError ? (
+                                    <Button
+                                        variant={isAnalyzing ? "destructive" : "default"}
+                                        size="sm"
+                                        onClick={() => setIsAnalyzing(!isAnalyzing)}
+                                    >
+                                        {isAnalyzing ? (
+                                            <>
+                                                <Square className="w-4 h-4 mr-2" />
+                                                Stop
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Play className="w-4 h-4 mr-2" />
+                                                Start Analysis
+                                            </>
+                                        )}
+                                    </Button>
+                                ) : analysisMode === "upload" ? (
+                                    <>
+                                        <Select onValueChange={setModel} value={model}>
+                                            <SelectTrigger className="w-[180px]">
+                                                <SelectValue placeholder="Select a Model" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectGroup>
+                                                    <SelectLabel>Models</SelectLabel>
+                                                    <SelectItem value="cx">Cheng Xi's Model</SelectItem>
+                                                    <SelectItem value="gy">Guan Yu's Model</SelectItem>
+                                                </SelectGroup>
+                                            </SelectContent>
+                                        </Select>
+                                        <Button onClick={handleUpload} disabled={isUploading}>
+                                            <Upload />
+                                            {isUploading ? "Uploading..." : "Upload & Analyse"}
+                                        </Button>
+                                    </>
+                                ) : null}
+                            </div>
                         </div>
                     </div>
                 </CardHeader>
@@ -99,10 +120,6 @@ export default function InferencePanel() {
                                 onValueChange={(val) => {
                                     setAnalysisMode(val as "live" | "upload")
                                     setIsAnalyzing(false)
-                                    if (val === "live") {
-                                        setUploadedVideos({})
-                                        setVideoUrls({})
-                                    }
                                 }}
                             >
                                 <TabsList className="bg-secondary rounded-lg p-1">

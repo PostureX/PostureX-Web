@@ -3,10 +3,48 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAnalysis } from "@/hooks/AnalysisContext";
 import { AlertCircle, CheckCircle, TriangleAlert } from "lucide-react";
 
-export default function AdditionalInfoPanel() {
-    const { keypoints } = useAnalysis();
+const cocoWholeBodyKeypoints = [
+  // Body (17 keypoints - same as COCO)
+  "nose", "left_eye", "right_eye", "left_ear", "right_ear",
+  "left_shoulder", "right_shoulder", "left_elbow", "right_elbow",
+  "left_wrist", "right_wrist", "left_hip", "right_hip",
+  "left_knee", "right_knee", "left_ankle", "right_ankle",
 
-    return <Card variant="noHighlight">
+  // Face (68 keypoints)
+  "face_0", "face_1", "face_2", "face_3", "face_4", "face_5", "face_6", "face_7", "face_8", "face_9",
+  "face_10", "face_11", "face_12", "face_13", "face_14", "face_15", "face_16", "face_17", "face_18", "face_19",
+  "face_20", "face_21", "face_22", "face_23", "face_24", "face_25", "face_26", "face_27", "face_28", "face_29",
+  "face_30", "face_31", "face_32", "face_33", "face_34", "face_35", "face_36", "face_37", "face_38", "face_39",
+  "face_40", "face_41", "face_42", "face_43", "face_44", "face_45", "face_46", "face_47", "face_48", "face_49",
+  "face_50", "face_51", "face_52", "face_53", "face_54", "face_55", "face_56", "face_57", "face_58", "face_59",
+  "face_60", "face_61", "face_62", "face_63", "face_64", "face_65", "face_66", "face_67",
+
+  // Left Hand (21 keypoints)
+  "left_hand_0", "left_hand_1", "left_hand_2", "left_hand_3", "left_hand_4",
+  "left_hand_5", "left_hand_6", "left_hand_7", "left_hand_8",
+  "left_hand_9", "left_hand_10", "left_hand_11", "left_hand_12",
+  "left_hand_13", "left_hand_14", "left_hand_15", "left_hand_16",
+  "left_hand_17", "left_hand_18", "left_hand_19", "left_hand_20",
+
+  // Right Hand (21 keypoints)
+  "right_hand_0", "right_hand_1", "right_hand_2", "right_hand_3", "right_hand_4",
+  "right_hand_5", "right_hand_6", "right_hand_7", "right_hand_8",
+  "right_hand_9", "right_hand_10", "right_hand_11", "right_hand_12",
+  "right_hand_13", "right_hand_14", "right_hand_15", "right_hand_16",
+  "right_hand_17", "right_hand_18", "right_hand_19", "right_hand_20",
+
+  // Left Foot (6 keypoints)
+  "left_foot_0", "left_foot_1", "left_foot_2", "left_foot_3", "left_foot_4", "left_foot_5",
+
+  // Right Foot (6 keypoints)
+  "right_foot_0", "right_foot_1", "right_foot_2", "right_foot_3", "right_foot_4", "right_foot_5"
+];
+
+
+export default function AdditionalInfoPanel() {
+    const { keypoints, analysisMode } = useAnalysis();
+
+    return analysisMode == "live" && <Card variant="noHighlight">
         <CardHeader>
             <CardTitle>Additional Information</CardTitle>
         </CardHeader>
@@ -22,14 +60,12 @@ export default function AdditionalInfoPanel() {
                         {keypoints.map((point) => (
                             <div key={point.id} className="flex items-center justify-between p-3 bg-secondary rounded-lg">
                                 <div>
-                                    <span className="font-medium">{point.name}</span>
                                     <div className="text-sm text-muted-foreground">
                                         X: {point.x}, Y: {point.y}
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <div className="text-sm font-medium">{(point.confidence * 100).toFixed(1)}%</div>
-                                    <div className="text-xs text-muted-foreground">Confidence</div>
+                                    <span className="text-xs text-muted-foreground">{cocoWholeBodyKeypoints[point.id - 1]}</span>
                                 </div>
                             </div>
                         ))}

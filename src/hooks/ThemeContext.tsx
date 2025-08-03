@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react"
 
-type Theme = "light" | "dark"
-type ThemeContextType = [Theme, (theme: Theme) => void]
+import { Theme, ThemeContextType } from "@/types/theme"
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 
