@@ -24,7 +24,7 @@ const getStatusVariant = (status: string) => {
 
 export default function UploadHeader() {
   const navigate = useNavigate()
-  const { analysis, downloadReport, retryAnalysis, deleteAnalysis, isDeleting } = useUploadDetail()
+  const { analysis, downloadReport, retryAnalysis, isRetrying, deleteAnalysis, isDeleting } = useUploadDetail()
   const [model, setModel] = useState("cx");
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
@@ -83,9 +83,14 @@ export default function UploadHeader() {
                   </SelectGroup>
                 </SelectContent>
               </Select>
-              <Button variant="outline" size="sm" onClick={retryAnalysis}>
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Retry Analysis
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => retryAnalysis(model)}
+                disabled={isRetrying}
+              >
+                <RefreshCw className={"w-4 h-4 mr-2" + (isRetrying ? " animate-spin" : "")} />
+                {isRetrying ? "Retrying..." : "Retry Analysis"}
               </Button>
             </>
           )}

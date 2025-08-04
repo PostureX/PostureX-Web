@@ -88,3 +88,14 @@ export interface AnalysisResult {
   frames_data: FrameData[];
   aggregated_results: AggregatedResults;
 }
+
+export const measurementUnits: Record<MeasurementKey, string> = {
+  foot_to_shoulder_offset_left: "cm",
+  foot_to_shoulder_offset_right: "cm",
+  knee_angle: "°",
+  head_tilt: "°",
+  arm_angle: "°",
+  arm_bent_angle: "°",
+  leg_spread: "cm",
+  back_angle: "°",
+};

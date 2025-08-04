@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Play, Pause, SkipBack, SkipForward, Volume2 } from "lucide-react"
 import { useUploadDetail } from "@/hooks/UploadDetailContext"
 import { useEffect, useRef, useState, useCallback, useMemo } from "react"
-import { FrameData, View, AnalysisResult } from "@/types"
+import { FrameData, View, AnalysisResult, measurementUnits, MeasurementKey } from "@/types"
 import COCO_WHOLEBODY_SKELETON from "@/config/cocoWholeBodySkeleton"
 
 export default function VideoAnalysisPlayer() {
@@ -76,50 +76,68 @@ export default function VideoAnalysisPlayer() {
     if (!ctx) return
 
     // Set canvas size to match video display size
-    const rect = video.getBoundingClientRect()
-    canvas.width = rect.width
-    canvas.height = rect.height
+    const rect = video.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = rect.height;
 
     // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    const keypoints = currentFrameData.keypoints
-    if (!keypoints || keypoints.length === 0) return
+    const keypoints = currentFrameData.keypoints;
+    if (!keypoints || keypoints.length === 0) return;
 
-    // Scale keypoints to canvas size
-    const scaleX = canvas.width / video.videoWidth
-    const scaleY = canvas.height / video.videoHeight
+    // Calculate aspect ratios
+    const videoAspect = video.videoWidth / video.videoHeight;
+    const canvasAspect = canvas.width / canvas.height;
+
+    let drawWidth = canvas.width;
+    let drawHeight = canvas.height;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    // If canvas aspect is wider than video, add horizontal letterboxing
+    if (canvasAspect > videoAspect) {
+      drawWidth = canvas.height * videoAspect;
+      offsetX = (canvas.width - drawWidth) / 2;
+    } else if (canvasAspect < videoAspect) {
+      // If canvas aspect is taller than video, add vertical letterboxing
+      drawHeight = canvas.width / videoAspect;
+      offsetY = (canvas.height - drawHeight) / 2;
+    }
+
+    const scaleX = drawWidth / video.videoWidth;
+    const scaleY = drawHeight / video.videoHeight;
 
     // Draw connections
-    ctx.strokeStyle = "#00ff00"
-    ctx.lineWidth = 2
+    ctx.strokeStyle = "#00ff00";
+    ctx.lineWidth = 2;
     COCO_WHOLEBODY_SKELETON.forEach(([startIdx, endIdx]) => {
       if (startIdx < keypoints.length && endIdx < keypoints.length) {
-        const start = keypoints[startIdx]
-        const end = keypoints[endIdx]
-        if (start && end && start[0] && start[1] && end[0] && end[1]) {
-          ctx.beginPath()
-          ctx.moveTo(start[0] * scaleX, start[1] * scaleY)
-          ctx.lineTo(end[0] * scaleX, end[1] * scaleY)
-          ctx.stroke()
+        const start = keypoints[startIdx];
+        const end = keypoints[endIdx];
+        if (start && end && start[0] !== undefined && start[1] !== undefined && end[0] !== undefined && end[1] !== undefined) {
+          ctx.beginPath();
+          ctx.moveTo(start[0] * scaleX + offsetX, start[1] * scaleY + offsetY);
+          ctx.lineTo(end[0] * scaleX + offsetX, end[1] * scaleY + offsetY);
+          ctx.stroke();
         }
       }
-    })
+    });
 
     // Draw keypoints
     keypoints.forEach((point, index) => {
       if (point && point[0] !== undefined && point[1] !== undefined) {
-        ctx.fillStyle = "#ff0000"
-        ctx.beginPath()
-        ctx.arc(point[0] * scaleX, point[1] * scaleY, 4, 0, 2 * Math.PI)
-        ctx.fill()
+        ctx.fillStyle = "#ff0000";
+        ctx.beginPath();
+        ctx.arc(point[0] * scaleX + offsetX, point[1] * scaleY + offsetY, 4, 0, 2 * Math.PI);
+        ctx.fill();
 
         // Draw keypoint index
-        ctx.fillStyle = "#ffffff"
-        ctx.font = "12px Arial"
-        ctx.fillText(index.toString(), point[0] * scaleX + 6, point[1] * scaleY - 6)
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "12px Arial";
+        ctx.fillText(index.toString(), point[0] * scaleX + offsetX + 6, point[1] * scaleY + offsetY - 6);
       }
-    })
+    });
   }, [currentFrameData])
 
   // Video event handlers
@@ -142,7 +160,7 @@ export default function VideoAnalysisPlayer() {
       } else {
         videoRef.current.play()
       }
-      setIsPlaying(!isPlaying)
+      setIsPlaying((prev) => !prev)
     }
   }
 
@@ -168,14 +186,15 @@ export default function VideoAnalysisPlayer() {
     }
   }
 
-  const handleViewChange = (view: string) => {
-    setCurrentView(view as View)
-    setCurrentTime(0)
-    setCurrentFrameIndex(0)
+  useEffect(() => {
+    setIsPlaying(false);
+    setCurrentTime(0);
+    setCurrentFrameIndex(0);
     if (videoRef.current) {
-      videoRef.current.currentTime = 0
+      videoRef.current.pause();
+      videoRef.current.currentTime = 0;
     }
-  }
+  }, [currentView]);
 
   // Draw keypoints when frame changes
   useEffect(() => {
@@ -209,7 +228,7 @@ export default function VideoAnalysisPlayer() {
           <div className="flex items-center justify-between">
             <CardTitle>Video Analysis Player</CardTitle>
             <div className="flex items-center gap-4">
-              <Select value={currentView} onValueChange={handleViewChange}>
+              <Select value={currentView} onValueChange={setCurrentView}>
                 <SelectTrigger className="w-32">
                   <SelectValue placeholder="Select view" />
                 </SelectTrigger>
@@ -331,7 +350,7 @@ export default function VideoAnalysisPlayer() {
                     >
                       <span className="text-sm font-medium capitalize">{key.replace(/_/g, " ")}</span>
                       <span className="text-sm font-mono">
-                        {typeof value === "number" ? value.toFixed(2) : String(value)}
+                        {typeof value === "number" ? value.toFixed(2) : String(value)}{measurementUnits[key as MeasurementKey]}
                       </span>
                     </div>
                   ))}

@@ -31,7 +31,7 @@ interface UploadDetailContextType {
   setCurrentFrame: (frame: FrameData) => void;
   aggregatedResults: Record<View, AggregatedResults> | undefined;
   downloadReport: () => void;
-  retryAnalysis: () => void;
+  retryAnalysis: (model: string) => void;
   isRetrying: boolean;
   retryError: unknown;
 }
@@ -88,19 +88,18 @@ export function UploadDetailProvider({ id, children }: { id: string; children: R
   useEffect(() => {
     if (analysisData) {
       setAnalysis(analysisData);
-
-      // set video urls
-      setVideoUrls(
-        Object.fromEntries(
-          Object.entries(analysisData.uploads)
-            .filter(([, url]) => typeof url === "string" && url !== undefined)
-        ) as Record<View, string>
-      );
-
-      // set current view
-      setCurrentView(Object.keys(analysisData.uploads)[0] as View);
+      // Only set video URLs once, not on every refetch
+      setCurrentView((prev) => prev ?? (Object.keys(analysisData.uploads)[0] as View));
+      if (!videoUrls) {
+        setVideoUrls(
+          Object.fromEntries(
+            Object.entries(analysisData.uploads)
+              .filter(([, url]) => typeof url === "string" && url !== undefined)
+          ) as Record<View, string>
+        );
+      }
     }
-  }, [analysisData]);
+  }, [analysisData, videoUrls]);
 
   // Fetch analysis_json_urls if present
   const angleUrls = analysis?.analysis_json_urls;
@@ -167,12 +166,16 @@ export function UploadDetailProvider({ id, children }: { id: string; children: R
     isPending: isRetrying,
     error: retryError,
   } = useMutation({
-    mutationFn: async (model) => {
+    mutationFn: async (model: string) => {
       const res = await api.post(`/analysis/retry/${id}`, { model });
       return res.data;
     },
     onSuccess: () => {
       refetch();
+    },
+    onError: (e) => {
+      console.log(e);
+      toast.error("Failed to retry analysis, please try again.");
     }
   });
 

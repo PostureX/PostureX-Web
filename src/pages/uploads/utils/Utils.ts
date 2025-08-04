@@ -20,3 +20,4 @@ export function getStatusColor(status: AnalysisStatus): string {
 			return "text-green-500";
 	}
 }
+
