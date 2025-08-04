@@ -7,11 +7,10 @@ interface InsightCardProps {
   type: "critical" | "warning" | "good" | "info";
   title: string;
   content: string;
-  change: string;
   isDragging?: boolean;
 }
 
-export default function InsightsCard({ type, title, content, change, isDragging = false }: InsightCardProps) {
+export default function InsightsCard({ type, title, content, isDragging = false }: InsightCardProps) {
   return (
     <Card
         variant="noHighlight"
@@ -53,7 +52,6 @@ export default function InsightsCard({ type, title, content, change, isDragging 
           }`}
         >
           <AlertCircle className="w-4 h-4 mr-2" />
-          <span className="text-sm font-medium">{change}</span>
         </div>
       </CardContent>
     </Card>

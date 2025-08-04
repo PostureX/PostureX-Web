@@ -6,12 +6,13 @@ import { Calendar } from "@/components/ui/calendar"
 import PostureInsightsCarousel from "@/components/custom/PostureInsightsCarousel"
 import UploadCard from "@/components/custom/UploadCard/UploadCard"
 import "./Home.css";
-import Slider from "@/components/custom/Slider/Slider";
-import { CalendarDays, ChevronDown, Plus, X, AlertTriangle } from "lucide-react";
+import { CalendarDays, ChevronDown, Plus, X, AlertTriangle, RefreshCcw } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import api from "@/api/api"; // <-- use axios instance
 import { useNavigate } from "react-router";
 import { routeNames } from "@/routes/routes";
+import { useAnalysisSummary, useRetryAnalysisSummary } from "@/hooks/useAnalysisSummary";
+import type { AnalysisSummary } from "@/hooks/useAnalysisSummary";
 
 type UploadData = {
   created_at: string;
@@ -25,50 +26,9 @@ type UploadData = {
 export default function HomePage() {
   const navigate = useNavigate();
 
-  // Transform insights data to new format
-  const insights: Array<{
-    type: "critical" | "warning" | "good" | "info";
-    title: string;
-    content: string;
-    change: string;
-  }> = [
-    {
-      type: "critical",
-      title: "Critical Issue",
-      content: "Your feet are not shoulder width apart. They are 20cm smaller than your shoulder width.",
-      change: "15% worse than previous",
-    },
-    {
-      type: "warning",
-      title: "Posture Alert",
-      content: "Your back is slightly hunched. Your back is slightly hunched. Your back is slightly hunched. Your back is slightly hunched. Your back is slightly hunched. Your back is slightly hunched andf abaias ajosinffak ajksdjklj.",
-      change: "10% worse than previous",
-    },
-    {
-      type: "good",
-      title: "Good Progress",
-      content: "You are sitting for too long.",
-      change: "5% better than previous",
-    },
-    {
-      type: "good",
-      title: "Good Progress",
-      content: "You are sitting for too long.",
-      change: "5% better than previous",
-    },
-    {
-      type: "good",
-      title: "Good Progress",
-      content: "You are sitting for too long.",
-      change: "5% better than previous",
-    },
-    {
-      type: "good",
-      title: "Good Progress",
-      content: "You are sitting for too long.",
-      change: "5% better than previous",
-    },
-  ];
+  // Fetch analysis summary
+  const { data: summary, isLoading: summaryLoading } = useAnalysisSummary() as { data: AnalysisSummary | undefined, isLoading: boolean };
+  const { mutate: retrySummary, isPending: isRetrying } = useRetryAnalysisSummary();
 
   // State for calendar
   const [showCalendar, setShowCalendar] = useState(false);
@@ -80,10 +40,10 @@ export default function HomePage() {
   // Format date range for display
   const formatDateRange = () => {
     if (!selectedDateRange?.from) return "Filter by Date";
-    
+
     const fromDate = selectedDateRange.from.toLocaleDateString();
     if (!selectedDateRange.to) return `From ${fromDate}`;
-    
+
     const toDate = selectedDateRange.to.toLocaleDateString();
     return `${fromDate} - ${toDate}`;
   };
@@ -135,18 +95,45 @@ export default function HomePage() {
   return (
     <div className="min-h-screen w-full bg-background">
       <div className="container mx-auto px-4 py-8">
-        {/* Posture Tabs */}
+        {/* Posture Insights (now also Analysis Summary) */}
         <div className="mb-8">
-          <h2 className="text-muted-foreground mb-4 text-[20px]">Posture</h2>
-          <Slider className="" />
-        </div>
-
-        {/* Posture Insights */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-primary mb-4">
-            Posture Insights <span className="text-lg font-normal text-muted-foreground">(Weekly)</span>
-          </h2>
-          <PostureInsightsCarousel insights={insights} />
+          <div className="flex justify-between items-center mb-2">
+            <h2 className="text-2xl font-bold text-primary mb-4">
+              Posture Insights <span className="text-lg font-normal text-muted-foreground">(Weekly)</span>
+            </h2>
+            <Button variant="outline" onClick={() => retrySummary()} disabled={isRetrying}>
+              {isRetrying ? (
+                <svg className="animate-spin w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                </svg>
+              ) : (
+                <RefreshCcw className="mr-2" />
+              )}
+              {isRetrying ? "Regenerating..." : "Regenerate"}
+            </Button>
+          </div>
+          {summaryLoading ? (
+            <Card className="mb-4 bg-muted border-0 flex items-center justify-center h-32">
+              <CardContent className="flex items-center justify-center h-full">
+                <div className="flex flex-col items-center justify-center">
+                  <svg className="animate-spin h-8 w-8 text-primary mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                  </svg>
+                  <div className="loading-spinner text-foreground">Loading insights...</div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (!summary?.insights || summary?.insights?.length === 0) ? (
+            <Card variant="noHighlight" className="mb-4 bg-muted border-0 flex items-center justify-center h-32">
+              <CardContent className="flex items-center justify-center h-full">
+                <div className="text-muted-foreground text-lg">{summary?.message || "No insights available."}</div>
+              </CardContent>
+            </Card>
+          ) : (
+            <PostureInsightsCarousel insights={summary.insights} />
+          )}
         </div>
 
         {/* Uploads Section */}
@@ -156,8 +143,8 @@ export default function HomePage() {
             <div className="flex items-center space-x-4">
               {/* Clear Filter Button */}
               {hasActiveFilter && (
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
                   className="flex items-center space-x-1 text-muted-foreground hover:text-foreground"
                   onClick={clearDateFilter}
@@ -167,8 +154,8 @@ export default function HomePage() {
                 </Button>
               )}
               <div className="relative calendar-container">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="flex items-center space-x-2 min-w-fit"
                   onClick={() => setShowCalendar(!showCalendar)}
                 >
@@ -243,9 +230,9 @@ export default function HomePage() {
                     upload.status === "failed"
                       ? undefined
                       : () => {
-                          // Handle view analysis action
-                          console.log(`View analysis for upload ${upload.id}`);
-                        }
+                        // Handle view analysis action
+                        console.log(`View analysis for upload ${upload.id}`);
+                      }
                   }
                 />
               ))
