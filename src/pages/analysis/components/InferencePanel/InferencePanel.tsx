@@ -10,8 +10,10 @@ import VideoUpload from "./VideoUpload"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useMutation } from "@tanstack/react-query"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useNavigate } from "react-router"
 
 export default function InferencePanel() {
+    const navigate = useNavigate()
     const {
         analysisMode,
         setAnalysisMode,
@@ -40,12 +42,16 @@ export default function InferencePanel() {
                 model,
             })
         },
-        onSuccess: () => {
+        onSuccess: (res) => {
             // wait 1 second before resetting
             setTimeout(() => {
                 setUploadedVideos({});
                 setUploads([]);
                 setVideoUrls({});
+                console.log(res)
+                if (res && typeof res === "object" && "id" in res) {
+                    navigate(`/uploads/${res.id}`);
+                }
             }, 1000);
         }
     })
