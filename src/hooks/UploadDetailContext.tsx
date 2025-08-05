@@ -9,6 +9,7 @@ import { saveAs } from "file-saver";
 import { useNavigate } from "react-router";
 import { routeNames } from "@/routes/routes";
 import { toast } from "sonner";
+import { useAuth } from "./AuthContext";
 
 interface UploadDetailContextType {
   deleteAnalysis: () => void;
@@ -44,24 +45,7 @@ const UploadDetailContext = createContext<UploadDetailContextType | undefined>(u
 export function UploadDetailProvider({ id, children }: { id: string; children: ReactNode }) {
   const navigate = useNavigate();
 
-  // React Query mutation for deleting analysis
-  const {
-    mutate: deleteAnalysis,
-    isPending: isDeleting,
-    error: deleteError,
-  } = useMutation({
-    mutationFn: async () => {
-      const res = await api.delete(`/analysis/${id}`);
-      return res.data;
-    },
-    onSuccess: () => {
-      navigate(routeNames.HOME);
-      toast.success("Analysis deleted successfully");
-    },
-    onError: () => {
-      toast.error("Failed to delete analysis, please try again.");
-    },
-  });
+  const { user } = useAuth();
   const [videoUrls, setVideoUrls] = useState<Record<View, string> | undefined>(undefined);
   const [analysis, setAnalysis] = useState<RawAnalysisDetailResponse | undefined>(undefined);
   const [analysisJsons, setAnalysisJsons] = useState<Record<View, AnalysisResult> | undefined>(undefined);
@@ -69,6 +53,29 @@ export function UploadDetailProvider({ id, children }: { id: string; children: R
   const [currentView, setCurrentView] = useState<View | undefined>(undefined);
   const [currentFrame, setCurrentFrame] = useState<FrameData | undefined>(undefined);
   const [aggregatedResults, setAggregatedResults] = useState<Record<View, AggregatedResults> | undefined>(undefined);
+
+  // React Query mutation for deleting analysis
+  const {
+    mutate: deleteAnalysis,
+    isPending: isDeleting,
+    error: deleteError,
+  } = useMutation({
+    mutationFn: async () => {
+      await api.delete(`/analysis/${id}`);
+    },
+    onSuccess: () => {
+      if (user?.is_admin) {
+        navigate(routeNames.USER + `/${analysis?.user_id}`);
+      } else {
+        navigate(routeNames.HOME);
+      }
+
+      toast.success("Analysis deleted successfully");
+    },
+    onError: () => {
+      toast.error("Failed to delete analysis, please try again.");
+    },
+  });
 
   const {
     data: analysisData,
@@ -230,7 +237,7 @@ export function UploadDetailProvider({ id, children }: { id: string; children: R
   } = useMutation({
     mutationFn: async () => {
       const res = await api.get(`/analysis/report/${id}`);
-      
+
       const url = res.data.url;
 
       // auto download the report

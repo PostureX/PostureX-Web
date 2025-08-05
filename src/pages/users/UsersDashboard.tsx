@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { AlertTriangle, RefreshCw, UserX, Search, Users, Calendar, Mail, BarChart3, Grid, List } from "lucide-react"
 import { formatDate, formatRelativeTime, getInitials, getPercentColor } from "@/utils/Utils"
 import { useNavigate } from "react-router"
+import { routeNames } from "@/routes/routes"
 
 export default function UsersDashboard() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -40,7 +41,7 @@ export default function UsersDashboard() {
   })
 
   const handleViewAnalyses = (userId: string) => {
-    navigate(`/users/${userId}`)
+    navigate(routeNames.USER + `/${userId}`)
   }
 
   if (isLoading) {

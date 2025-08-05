@@ -19,7 +19,7 @@ export const routeNames = {
   LOGIN: "/login",
   UPLOADS: "/uploads/:id",
   USERS: "/users",
-  USER: "/users/:id"
+  USER: "/user"
 };
 
 export const router = createBrowserRouter([
@@ -62,7 +62,7 @@ export const router = createBrowserRouter([
                     element: <UsersDashboard />
                   },
                   {
-                    path: routeNames.USER,
+                    path: routeNames.USER + "/:id",
                     element: <HomePage />
                   }
                 ]
