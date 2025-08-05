@@ -1,7 +1,7 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAnalysis } from "@/hooks/AnalysisContext";
-import { getPercentColor } from "@/pages/uploads/utils/Utils";
+import { getPercentColor } from "@/utils/Utils";
 import { measurementUnits } from "@/types/analysis";
 
 const cocoWholeBodyKeypoints = [

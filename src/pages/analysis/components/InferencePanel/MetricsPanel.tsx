@@ -2,7 +2,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useAnalysis } from "@/hooks/AnalysisContext";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { getPercentColor } from "@/pages/uploads/utils/Utils";
+import { getPercentColor } from "@/utils/Utils";
 
 // Recommendation rubric for each metric
 function getRecommendation(key: string, value: number): string {

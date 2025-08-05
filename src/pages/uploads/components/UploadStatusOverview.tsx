@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Eye, Target, Activity, FileVideo } from "lucide-react"
 import { useUploadDetail } from "@/hooks/UploadDetailContext"
 import { View, AnalysisResult } from "@/types"
-import { getStatusColor } from "../utils/Utils"
+import { getStatusColor } from "../../../utils/Utils"
 
 export default function UploadStatusOverview() {
   const { analysis, analysisJsons, videoUrls } = useUploadDetail()
