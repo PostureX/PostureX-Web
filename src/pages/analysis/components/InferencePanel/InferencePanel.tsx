@@ -49,8 +49,8 @@ export default function InferencePanel() {
                 setUploads([]);
                 setVideoUrls({});
                 console.log(res)
-                if (res && typeof res === "object" && "id" in res) {
-                    navigate(`/uploads/${res.id}`);
+                if (res && typeof res === "object" && "analysis_id" in res) {
+                    navigate(`/uploads/${res.analysis_id}`);
                 }
             }, 1000);
         }

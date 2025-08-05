@@ -11,7 +11,6 @@ import NotFound from "@/pages/404/NotFound";
 import UploadDetailsPage from "@/pages/uploads/Uploads";
 import AdminRoute from "./AdminRoute";
 import UsersDashboard from "@/pages/users/UsersDashboard";
-import UserDetails from "@/pages/users/UserDetails";
 
 export const routeNames = {
   HOME: "/dashboard",
@@ -64,7 +63,7 @@ export const router = createBrowserRouter([
                   },
                   {
                     path: routeNames.USER,
-                    element: <UserDetails />
+                    element: <HomePage />
                   }
                 ]
               }

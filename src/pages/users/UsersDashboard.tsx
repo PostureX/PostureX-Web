@@ -13,18 +13,12 @@ import { AlertTriangle, RefreshCw, UserX, Search, Users, Calendar, Mail, BarChar
 import { formatDate, formatRelativeTime, getInitials, getPercentColor } from "@/utils/Utils"
 import { useNavigate } from "react-router"
 
-interface UserWithStats extends User {
-  analysis_count: number
-  last_analysis: string
-  average_score: number
-}
-
 export default function UsersDashboard() {
   const [searchQuery, setSearchQuery] = useState("")
   const [view, setView] = useState<"grid" | "list">("grid")
   const navigate = useNavigate()
 
-  const { data, isLoading, error, refetch } = useQuery<UserWithStats[]>({
+  const { data, isLoading, error, refetch } = useQuery<User[]>({
     queryKey: ["users"],
     queryFn: async () => {
       const res = await api.get("/users")
@@ -168,14 +162,14 @@ export default function UsersDashboard() {
                 <CardContent className="space-y-4">
                   {/* User Stats */}
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center p-3 rounded-lg bg-info/10">
-                      <div className="text-2xl font-bold text-info">{user.analysis_count || 0}</div>
+                    <Card variant="noHighlight" className="text-center gap-0 p-5 rounded-lg bg-accent text-accent-foreground">
+                      <div className="text-2xl font-bold text-info">{user.total_analyses || 0}</div>
                       <div className="text-xs text-info">Analyses</div>
-                    </div>
-                    <div className="text-center p-3 rounded-lg bg-success/10">
-                      <div className="text-2xl font-bold text-success">{user.average_score || 0}%</div>
-                      <div className="text-xs text-success">Avg Score</div>
-                    </div>
+                    </Card>
+                    <Card variant="noHighlight" className={"text-center gap-0 p-5 rounded-lg bg-accent " + getPercentColor((user.average_overall_score !== undefined ? user.average_overall_score * 100 : 0), "text")}>
+                      <div className="text-2xl font-bold text-success">{user.average_overall_score !== undefined ? user.average_overall_score * 100 : 0}%</div>
+                      <div className="text-xs text-success">Avg Score (current week)</div>
+                    </Card>
                   </div>
 
                   {/* User Details */}
@@ -183,7 +177,7 @@ export default function UsersDashboard() {
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground">Last Analysis</span>
                       <span className="font-medium text-foreground">
-                        {user.last_analysis ? formatRelativeTime(user.last_analysis) : "Never"}
+                        {user.latest_analysis_datetime ? formatRelativeTime(user.latest_analysis_datetime) : "Never"}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
@@ -236,16 +230,18 @@ export default function UsersDashboard() {
                       <div className="flex items-center gap-8">
                         {/* Stats */}
                         <div className="text-center">
-                          <div className="text-2xl font-bold text-info">{user.analysis_count || 0}</div>
+                          <div className="text-2xl font-bold text-info">{user.total_analyses || 0}</div>
                           <div className="text-xs text-info">Analyses</div>
                         </div>
                         <div className="text-center">
-                          <div className={`text-2xl font-bold ${getPercentColor(user.average_score, "text")}`}>{user.average_score || 0}%</div>
-                          <div className="text-xs text-success">Avg Score</div>
+                          <div className={`text-2xl font-bold ${getPercentColor((user.average_overall_score !== undefined ? user.average_overall_score * 100 : 0), "text")}`}>
+                            {(user.average_overall_score !== undefined ? user.average_overall_score * 100 : 0)}%
+                          </div>
+                          <div className="text-xs text-success">Avg Score (current week)</div>
                         </div>
                         <div className="text-center">
                           <div className="text-sm font-medium text-foreground">
-                            {user.last_analysis ? formatRelativeTime(user.last_analysis) : "Never"}
+                            {user.latest_analysis_datetime ? formatRelativeTime(user.latest_analysis_datetime) : "Never"}
                           </div>
                           <div className="text-xs text-muted-foreground">Last Analysis</div>
                         </div>

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import InsightsCard from "./InsightsCard/InsightsCard";
 import { GripHorizontal, ChevronLeft, ChevronRight } from "lucide-react";
-import { AnalysisSummaryInsight } from "@/hooks/useAnalysisSummary";
+import { AnalysisSummaryInsight } from "@/hooks/useUserAnalyses";
 
 interface PostureInsightsCarouselProps {
   insights: AnalysisSummaryInsight[];
