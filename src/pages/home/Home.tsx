@@ -27,8 +27,14 @@ export default function HomePage() {
   const navigate = useNavigate();
 
   // Fetch analysis summary
-  const { data: summary, isLoading: summaryLoading } = useAnalysisSummary() as { data: AnalysisSummary | undefined, isLoading: boolean };
+  const { data: summary, isLoading: summaryLoading, refetch: refetchSummary } = useAnalysisSummary() as { data: AnalysisSummary | undefined, isLoading: boolean, refetch: () => void };
   const { mutate: retrySummary, isPending: isRetrying } = useRetryAnalysisSummary();
+  
+  useEffect(() => {
+    if (!isRetrying) {
+      refetchSummary();
+    }
+  }, [isRetrying, refetchSummary]);
 
   // State for calendar
   const [showCalendar, setShowCalendar] = useState(false);
@@ -93,7 +99,7 @@ export default function HomePage() {
   });
 
   return (
-    <div className="min-h-screen w-full bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 w-full">
       <div className="container mx-auto px-4 py-8">
         {/* Posture Insights (now also Analysis Summary) */}
         <div className="mb-8">
@@ -114,7 +120,7 @@ export default function HomePage() {
             </Button>
           </div>
           {summaryLoading ? (
-            <Card className="mb-4 bg-muted border-0 flex items-center justify-center h-32">
+            <Card variant="noHighlight" className="mb-4 bg-muted border-0 flex items-center justify-center h-32">
               <CardContent className="flex items-center justify-center h-full">
                 <div className="flex flex-col items-center justify-center">
                   <svg className="animate-spin h-8 w-8 text-primary mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
