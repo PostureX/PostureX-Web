@@ -120,7 +120,7 @@ export function UploadProvider({ children }: { children: ReactNode }) {
       Object.entries(files).forEach(([angle, file]) => {
         if (!file) return
         const id = fileIds[`${file.name}_${angle}`]
-  updateUpload(id, { progress: 100, status: "completed" as UploadStatus })
+        updateUpload(id, { progress: 100, status: "completed" as UploadStatus })
       })
 
       return response.data
@@ -128,7 +128,7 @@ export function UploadProvider({ children }: { children: ReactNode }) {
       Object.entries(files).forEach(([angle, file]) => {
         if (!file) return
         const id = fileIds[`${file.name}_${angle}`]
-  updateUpload(id, { status: "error" as UploadStatus })
+        updateUpload(id, { status: "error" as UploadStatus })
       })
       throw err
     }
