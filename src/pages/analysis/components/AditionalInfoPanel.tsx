@@ -1,7 +1,8 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAnalysis } from "@/hooks/AnalysisContext";
-import { AlertCircle, CheckCircle, TriangleAlert } from "lucide-react";
+import { getPercentColor } from "@/pages/uploads/utils/Utils";
+import { measurementUnits } from "@/types/analysis";
 
 const cocoWholeBodyKeypoints = [
   // Body (17 keypoints - same as COCO)
@@ -42,7 +43,7 @@ const cocoWholeBodyKeypoints = [
 
 
 export default function AdditionalInfoPanel() {
-    const { keypoints, analysisMode } = useAnalysis();
+    const { keypoints, analysisMode, rawScores, measurements } = useAnalysis();
 
     return analysisMode == "live" && <Card variant="noHighlight">
         <CardHeader>
@@ -52,7 +53,7 @@ export default function AdditionalInfoPanel() {
             <Tabs defaultValue="metrics" className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="keypoints">Keypoint Data</TabsTrigger>
-                    <TabsTrigger value="recommendations">Recommendations</TabsTrigger>
+                    <TabsTrigger value="scores">Scores & Measurements</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="keypoints" className="space-y-4">
@@ -72,29 +73,37 @@ export default function AdditionalInfoPanel() {
                     </div>
                 </TabsContent>
 
-                <TabsContent value="recommendations" className="space-y-4">
-                    <div className="space-y-4 text-primary-foreground">
-                        <div className="p-4 bg-(--warning) border rounded-lg">
-                            <AlertCircle className="w-5 h-5 mb-2" />
-                            <h4 className="font-medium mb-2">Shoulder Alignment</h4>
-                            <p className="text-sm">
-                                Your shoulders are slightly uneven. Try to keep both shoulders level and square to the target.
-                            </p>
-                        </div>
-                        <div className="p-4 bg-(--danger) border rounded-lg">
-                            <TriangleAlert className="w-5 h-5 mb-2" />
-                            <h4 className="font-medium mb-2">Elbow Position</h4>
-                            <p className="text-sm">
-                                Your elbows are excessively bent, which may cause instability. Aim to keep your elbows straighter and aligned with your wrists.
-                            </p>
-                        </div>
-                        <div className="p-4 bg-(--success) border rounded-lg">
-                            <CheckCircle className="w-5 h-5 mb-2" />
-                            <h4 className="font-medium mb-2">Grip Position</h4>
-                            <p className="text-sm">
-                                Excellent grip positioning! Your hand placement is optimal for control and accuracy.
-                            </p>
-                        </div>
+                <TabsContent value="scores" className="space-y-4">
+                    <div className="space-y-2">
+                        <h4 className="font-semibold mb-2">Raw Scores (Percentages)</h4>
+                        {rawScores && typeof rawScores === "object" && !Array.isArray(rawScores) ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                {Object.entries(rawScores).map(([key, value]) => (
+                                    <div key={key} className="flex items-center justify-between p-2 bg-gray-100 dark:bg-gray-800 rounded">
+                                        <span className="text-sm font-medium capitalize">{key.replace(/_/g, " ")}</span>
+                                        <span className={`text-sm font-mono px-2 py-1 rounded ${getPercentColor(typeof value === "number" ? value : Number(value))}`}>
+                                            {typeof value === "number" ? value.toFixed(1) : String(value)}%
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : <div className="text-muted-foreground">No raw scores available.</div>}
+                    </div>
+                    <div className="space-y-2 mt-4">
+                        <h4 className="font-semibold mb-2">Measurements</h4>
+                        {measurements && typeof measurements === "object" && !Array.isArray(measurements) ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                {Object.entries(measurements).map(([key, value]) => (
+                                    <div key={key} className="flex items-center justify-between p-2 bg-gray-100 dark:bg-gray-800 rounded">
+                                        <span className="text-sm font-medium capitalize">{key.replace(/_/g, " ")}</span>
+                                        <span className="text-sm font-mono">
+                                            {typeof value === "number" ? value.toFixed(2) : String(value)}
+                                            {measurementUnits[key as keyof typeof measurementUnits] ? `${measurementUnits[key as keyof typeof measurementUnits]}` : ""}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : <div className="text-muted-foreground">No measurements available.</div>}
                     </div>
                 </TabsContent>
             </Tabs>

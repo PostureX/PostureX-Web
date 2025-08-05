@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, type ReactNode, useEffect, useRef } from "react"
-import { Keypoint, PostureMetric } from "@/types/analysis"
+import { Keypoint, Measurements, PostureMetric } from "@/types/analysis"
 import { InferenceSettingsProvider } from "./InferenceSettingsContext"
 import api from "@/api/api"
 
@@ -10,6 +10,8 @@ type AnalysisMode = "live" | "upload"
 // PostureMetric imported from types
 
 interface AnalysisContextType {
+  measurements: Measurements;
+  setMeasurements: (v: Measurements) => void;
   isAnalyzing: boolean
   setIsAnalyzing: (v: boolean) => void
   currentScore: number
@@ -77,6 +79,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
   const [keypoints, setKeypoints] = useState<Keypoint[]>([])
   const [rawScores, setRawScores] = useState<number[] | null>(null)
   const [model, setModel] = useState("cx")
+  const [measurements, setMeasurements] = useState<import("@/types/analysis").Measurements>({});
 
   const wsRef = useRef<WebSocket | null>(null)
   const frameIntervalRef = useRef<number | null>(null)
@@ -141,12 +144,15 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
                 }));
                 setKeypoints(mappedKeypoints);
               }
+              if (data.measurements) {
+                setMeasurements(data.measurements);
+              }
+
               if (data.posture_score) {
                 setPostureMetrics(parsePostureScore(data.posture_score));
               }
               if (data.raw_scores_percent) {
                 setRawScores(data.raw_scores_percent);
-                console.log("Raw scores updated:", data.raw_scores_percent);
               }
             } catch (e) {
               console.error("WebSocket message error:", e);
@@ -219,6 +225,8 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
         setRawScores,
         model,
         setModel,
+        measurements,
+        setMeasurements,
       }}
     >
       <InferenceSettingsProvider>{children}</InferenceSettingsProvider>

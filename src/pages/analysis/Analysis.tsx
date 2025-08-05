@@ -8,7 +8,7 @@ import {
 import { useAnalysis } from "@/hooks/AnalysisContext"
 import AdditionalInfoPanel from "./components/AditionalInfoPanel"
 import InferencePanel from "./components/InferencePanel/InferencePanel"
-import MetricsPanel from "./components/MetricsPanel"
+import MetricsPanel from "./components/InferencePanel/MetricsPanel"
 import InferenceSettings from "./components/InferenceSettings";
 import { useEffect, useState } from "react";
 
@@ -58,7 +58,7 @@ export default function Analysis() {
           {/* Video Feed */}
           <InferencePanel />
 
-          {/* Metrics Panel */}
+          {/* Recommendations Panel */}
           <MetricsPanel />
         </div>
 
