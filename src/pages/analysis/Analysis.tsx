@@ -25,7 +25,7 @@ export default function Analysis() {
   }, [setIsAnalyzing, settingsOpen]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
+    <div className="min-h-screen p-4">
       <InferenceSettings open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}

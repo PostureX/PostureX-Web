@@ -32,7 +32,7 @@ export default function NotFound() {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden">
       <AnimatedNetworkBackground />
 
       <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
