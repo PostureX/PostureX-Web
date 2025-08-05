@@ -46,7 +46,9 @@ function getRecommendation(key: string, value: number): string {
 }
 
 export default function MetricsPanel() {
-  const { measurements, rawScores } = useAnalysis();
+  const { measurements, rawScores, analysisMode } = useAnalysis();
+
+  if (analysisMode === "upload") return null;
 
   // Convert measurements to array of metric objects
   let metrics: { key: string; value: number }[] = [];
