@@ -6,9 +6,10 @@ import { Menu, X, User } from "lucide-react"
 import Logo from "@/components/custom/Logo"
 import ProfileModal from "@/components/custom/ProfileModal/ProfileModal"
 import "./Header.css"
+import { routeNames } from "@/routes/routes"
 
 export default function Header() {
-    const { logout } = useAuth()
+    const { logout, user } = useAuth()
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
     const [profileOpen, setProfileOpen] = useState(false)
 
@@ -32,10 +33,17 @@ export default function Header() {
 
                     {/* Desktop Navigation */}
                     <div className="hidden md:flex items-center space-x-6">
-                        <a href="/dashboard" className="text-muted-foreground hover:text-foreground transition-colors font-semibold">
+                        <a href={routeNames.HOME} className="text-muted-foreground hover:text-foreground transition-colors font-semibold">
                             Home
                         </a>
-                        <a href="/analysis" className="text-muted-foreground hover:text-foreground transition-colors font-semibold">
+                        {
+                            user?.is_admin && (
+                                <a href={routeNames.USERS} className="text-muted-foreground hover:text-foreground transition-colors font-semibold">
+                                    Trainees
+                                </a>
+                            )
+                        }
+                        <a href={routeNames.ANALYSIS} className="text-muted-foreground hover:text-foreground transition-colors font-semibold">
                             Analysis
                         </a>
                         <button
