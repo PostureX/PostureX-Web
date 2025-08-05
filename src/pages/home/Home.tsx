@@ -2,28 +2,26 @@ import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar"
 import PostureInsightsCarousel from "@/components/custom/PostureInsightsCarousel"
 import UploadCard from "@/components/custom/UploadCard/UploadCard"
 import "./Home.css";
-import { CalendarDays, ChevronDown, Plus, X, AlertTriangle, RefreshCcw } from "lucide-react";
+import { CalendarDays, Plus, X, AlertTriangle, RefreshCcw, SortAsc, SortDesc } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import api from "@/api/api"; // <-- use axios instance
 import { useNavigate } from "react-router";
 import { routeNames } from "@/routes/routes";
 import { useAnalysisSummary, useRetryAnalysisSummary } from "@/hooks/useAnalysisSummary";
 import type { AnalysisSummary } from "@/hooks/useAnalysisSummary";
-
-type UploadData = {
-  created_at: string;
-  id: number;
-  text: string;
-  user_id: number;
-  video_url: string;
-  status?: string; // <-- add status
-};
+import { formatDate } from "../../utils/Utils";
+import { UploadData } from "@/types";
 
 export default function HomePage() {
+  // Status filter state
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  // Sort state
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
   const navigate = useNavigate();
 
   // Fetch analysis summary
@@ -98,8 +96,29 @@ export default function HomePage() {
     },
   });
 
+  // Filter uploads by date and status
+  let filteredUploads = uploadData || [];
+  if (selectedDateRange?.from) {
+    const from = selectedDateRange.from;
+    const to = selectedDateRange.to || selectedDateRange.from;
+    filteredUploads = filteredUploads.filter((upload) => {
+      const uploadDate = new Date(upload.created_at);
+      return uploadDate >= from && uploadDate <= to;
+    });
+  }
+  if (statusFilter !== 'all') {
+    filteredUploads = filteredUploads.filter((upload) => upload.status === statusFilter);
+  }
+
+  // Sort uploads
+  filteredUploads = filteredUploads.slice().sort((a, b) => {
+    const dateA = new Date(a.created_at).getTime();
+    const dateB = new Date(b.created_at).getTime();
+    return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
+  });
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 w-full">
+    <div className="min-h-screen w-full">
       <div className="container mx-auto px-4 py-8">
         {/* Posture Insights (now also Analysis Summary) */}
         <div className="mb-8">
@@ -147,6 +166,28 @@ export default function HomePage() {
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-primary">Uploads</h2>
             <div className="flex items-center space-x-4">
+              {/* Status Filter Dropdown */}
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger
+                  className={`w-[140px] ${
+                    statusFilter === "completed"
+                      ? "text-green-300"
+                      : statusFilter === "in_progress"
+                      ? "text-blue-300"
+                      : statusFilter === "failed"
+                      ? "text-red-300"
+                      : ""
+                  }`}
+                >
+                  <SelectValue placeholder="Filter by Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem className="text-green-300" value="completed">Completed</SelectItem>
+                  <SelectItem className="text-blue-300" value="in_progress">In Progress</SelectItem>
+                  <SelectItem className="text-red-300" value="failed">Failed</SelectItem>
+                </SelectContent>
+              </Select>
               {/* Clear Filter Button */}
               {hasActiveFilter && (
                 <Button
@@ -183,10 +224,20 @@ export default function HomePage() {
                   </div>
                 )}
               </div>
-              <Button variant="outline" className="flex items-center space-x-2">
-                <span>Sort</span>
-                <ChevronDown className="w-4 h-4" />
-              </Button>
+              <div className="relative">
+                <Button
+                  variant="outline"
+                  className="flex items-center space-x-2"
+                  onClick={() => setSortOrder(sortOrder === 'newest' ? 'oldest' : 'newest')}
+                >
+                  <span>Sort: Date</span>
+                  {sortOrder === 'newest' ? (
+                    <SortDesc className="w-4 h-4" />
+                  ) : (
+                    <SortAsc className="w-4 h-4" />
+                  )}
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -225,23 +276,29 @@ export default function HomePage() {
                 </CardContent>
               </Card>
             ) : (
-              uploadData &&
-              uploadData.map((upload: UploadData) => (
-                <UploadCard
-                  key={upload.id}
-                  id={upload.id}
-                  date={upload.created_at}
-                  status={upload.status}
-                  onViewAnalysis={
-                    upload.status === "failed"
-                      ? undefined
-                      : () => {
-                        // Handle view analysis action
-                        console.log(`View analysis for upload ${upload.id}`);
-                      }
-                  }
-                />
-              ))
+              filteredUploads &&
+              filteredUploads.map((upload: UploadData) => {
+                // Format date as 'MMM DD, YYYY, HH:mm'
+                const dateObj = new Date(upload.created_at);
+                const formattedDate = formatDate(dateObj);
+                return (
+                  <UploadCard
+                    key={upload.id}
+                    id={upload.id}
+                    date={formattedDate}
+                    status={upload.status}
+                    thumbnail={Object.entries(upload.uploads).length > 0 ? Object.values(upload.uploads)[0] : undefined}
+                    onViewAnalysis={
+                      upload.status === "failed"
+                        ? undefined
+                        : () => {
+                          // Handle view analysis action
+                          console.log(`View analysis for upload ${upload.id}`);
+                        }
+                    }
+                  />
+                );
+              })
             )}
           </div>
         </div>
