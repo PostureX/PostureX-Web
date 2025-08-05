@@ -30,7 +30,10 @@ interface UploadDetailContextType {
   currentFrame: FrameData | undefined;
   setCurrentFrame: (frame: FrameData) => void;
   aggregatedResults: Record<View, AggregatedResults> | undefined;
+  downloadRawData: () => void;
   downloadReport: () => void;
+  isDownloadingReport: boolean;
+  downloadReportError: unknown;
   retryAnalysis: (model: string) => void;
   isRetrying: boolean;
   retryError: unknown;
@@ -179,7 +182,7 @@ export function UploadDetailProvider({ id, children }: { id: string; children: R
     }
   });
 
-  const downloadReport = async (): Promise<void> => {
+  const downloadRawData = async (): Promise<void> => {
     const zip = new JSZip();
 
     // Add analysis JSON files
@@ -219,6 +222,31 @@ export function UploadDetailProvider({ id, children }: { id: string; children: R
     }
   };
 
+  // Mutation for downloading report
+  const {
+    mutate: downloadReport,
+    isPending: isDownloadingReport,
+    error: downloadReportError,
+  } = useMutation({
+    mutationFn: async () => {
+      const res = await api.get(`/analysis/report/${id}`);
+      
+      const url = res.data.url;
+
+      // auto download the report
+      const link = document.createElement("a");
+      link.href = url;
+      link.toggleAttribute('download');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    },
+    onError: (e) => {
+      console.error("Error downloading report:", e);
+      toast.error("Failed to download report, please try again.");
+    }
+  });
+
   return (
     <UploadDetailContext.Provider value={{
       analysis,
@@ -237,13 +265,16 @@ export function UploadDetailProvider({ id, children }: { id: string; children: R
       currentFrame,
       setCurrentFrame,
       aggregatedResults,
-      downloadReport,
+      downloadRawData,
       retryAnalysis,
       isRetrying,
       retryError,
       deleteAnalysis,
       isDeleting,
-      deleteError
+      deleteError,
+      downloadReport,
+      isDownloadingReport,
+      downloadReportError
     }}>
       {children}
     </UploadDetailContext.Provider>

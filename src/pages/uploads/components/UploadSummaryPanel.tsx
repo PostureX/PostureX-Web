@@ -24,7 +24,7 @@ import { AnalysisResult, View } from "@/types/analysis"
 import DeleteAnalysisDialog from "./DeleteAnalysisDialog"
 
 export default function UploadSummaryPanel() {
-  const { analysis, analysisJsons, feedback, videoUrls, currentView, downloadReport, deleteAnalysis, isDeleting } = useUploadDetail()
+  const { analysis, analysisJsons, feedback, videoUrls, currentView, downloadRawData, downloadReport, deleteAnalysis, isDeleting } = useUploadDetail()
   const [expandedMetrics, setExpandedMetrics] = useState<Record<string, boolean>>({})
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false)
 
@@ -221,7 +221,11 @@ export default function UploadSummaryPanel() {
         <CardContent className="space-y-2">
           <Button className="w-full bg-transparent" variant="outline" size="sm" onClick={downloadReport}>
             <Download className="w-3 h-3 mr-2" />
-            Export Data
+            Download Report
+          </Button>
+          <Button className="w-full bg-transparent" variant="outline" size="sm" onClick={downloadRawData}>
+            <Download className="w-3 h-3 mr-2" />
+            Download Raw Data
           </Button>
           <Button className="w-full bg-transparent" variant="outline" size="sm">
             <Share2 className="w-3 h-3 mr-2" />
