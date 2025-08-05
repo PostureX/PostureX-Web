@@ -2,9 +2,10 @@
 
 export interface User {
     id: string;
-    username: string;
-    email?: string;
-    isAdmin?: boolean;
+    name: string;
+    email: string;
+    is_admin: boolean;
+    created_at: string;
     [key: string]: unknown;
 }
 

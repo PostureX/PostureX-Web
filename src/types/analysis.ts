@@ -89,6 +89,15 @@ export interface AnalysisResult {
   aggregated_results: AggregatedResults;
 }
 
+export interface UploadData {
+  created_at: string;
+  id: number;
+  text: string;
+  user_id: number;
+  status?: string;
+  uploads: Record<View, string>;
+};
+
 export const measurementUnits: Record<MeasurementKey, string> = {
   foot_to_shoulder_offset_left: "cm",
   foot_to_shoulder_offset_right: "cm",
