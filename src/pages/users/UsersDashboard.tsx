@@ -168,7 +168,7 @@ export default function UsersDashboard() {
                       <div className="text-xs text-info">Analyses</div>
                     </Card>
                     <Card variant="noHighlight" className={"text-center gap-0 p-5 rounded-lg bg-accent " + getPercentColor((user.average_overall_score !== undefined ? user.average_overall_score * 100 : 0), "text")}>
-                      <div className="text-2xl font-bold text-success">{user.average_overall_score !== undefined ? user.average_overall_score * 100 : 0}%</div>
+                      <div className="text-2xl font-bold text-success">{user.average_overall_score !== undefined ? Math.round(user.average_overall_score * 100) : 0}%</div>
                       <div className="text-xs text-success">Avg Score (current week)</div>
                     </Card>
                   </div>
@@ -236,7 +236,7 @@ export default function UsersDashboard() {
                         </div>
                         <div className="text-center">
                           <div className={`text-2xl font-bold ${getPercentColor((user.average_overall_score !== undefined ? user.average_overall_score * 100 : 0), "text")}`}>
-                            {(user.average_overall_score !== undefined ? user.average_overall_score * 100 : 0)}%
+                            {(user.average_overall_score !== undefined ? Math.round(user.average_overall_score * 100) : 0)}%
                           </div>
                           <div className="text-xs text-success">Avg Score (current week)</div>
                         </div>

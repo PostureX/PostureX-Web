@@ -141,7 +141,7 @@ export default function HomePage() {
                     </div>
                     <div className="text-center">
                       <div className={`text-2xl font-bold ${getPercentColor((user.average_overall_score !== undefined ? user.average_overall_score * 100 : 0), "text")}`}>
-                        {(user.average_overall_score !== undefined ? user.average_overall_score * 100 : 0)}%
+                        {(user.average_overall_score !== undefined ? Math.round(user.average_overall_score * 100) : 0)}%
                       </div>
                       <div className="text-xs text-success">Avg Score (current week)</div>
                     </div>
