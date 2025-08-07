@@ -3,9 +3,10 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { useUploadDetail } from "@/hooks/UploadDetailContext"
 import { AnalysisResult } from "@/types"
+import { Button } from "@/components/ui/button"
 
 export default function UploadRawDataPanel() {
-  const { analysisJsons, analysis } = useUploadDetail()
+  const { analysisJsons, analysis, downloadRawData } = useUploadDetail()
 
   if (!analysis || !analysisJsons) return null
 
@@ -13,6 +14,7 @@ export default function UploadRawDataPanel() {
     <Card variant="noHighlight" className="bg-white dark:bg-gray-800">
       <CardHeader>
         <CardTitle>Detailed Analysis Data</CardTitle>
+        <Button onClick={downloadRawData}>Download Raw Data</Button>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="structured" className="w-full">

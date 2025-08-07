@@ -128,11 +128,6 @@ export default function AnalysisOverlay() {
 
     const videoReady = videoDims.width > 0 && videoDims.height > 0;
 
-    const maxIndex = keypoints.length - 1;
-    console.log("max keypoint index:", maxIndex);
-    console.log("AnalysisOverlay keypoints:", allowedIndices);
-    console.log("keypoints array:", keypoints);
-
     return (
         <>
             {isAnalyzing && videoReady && (

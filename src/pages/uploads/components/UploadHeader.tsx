@@ -8,6 +8,7 @@ import { useNavigate } from "react-router"
 import { SelectTrigger, SelectValue, SelectContent, SelectGroup, SelectLabel, SelectItem, Select } from "@/components/ui/select"
 import { useState } from "react"
 import DeleteAnalysisDialog from "./DeleteAnalysisDialog"
+import { formatDate } from "../../../utils/Utils"
 
 const getStatusVariant = (status: string) => {
   switch (status) {
@@ -24,11 +25,13 @@ const getStatusVariant = (status: string) => {
 
 export default function UploadHeader() {
   const navigate = useNavigate()
-  const { analysis, downloadReport, retryAnalysis, deleteAnalysis, isDeleting } = useUploadDetail()
+  const { analysis, downloadReport, retryAnalysis, isRetrying, deleteAnalysis, isDeleting } = useUploadDetail()
   const [model, setModel] = useState("cx");
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
   if (!analysis) return null
+
+  const formattedDate = formatDate(new Date(analysis.created_at));
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
@@ -42,6 +45,9 @@ export default function UploadHeader() {
             <Badge variant="secondary" className="text-sm">
               Model Used - <span className="font-semibold">{analysis.model_name}</span>
             </Badge>
+            {formattedDate && (
+              <div className="text-xs text-gray-500 dark:text-gray-400">{formattedDate}</div>
+            )}
             <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
               <div className="flex items-center gap-2">
                 <FileVideo className="w-4 h-4" />
@@ -83,9 +89,14 @@ export default function UploadHeader() {
                   </SelectGroup>
                 </SelectContent>
               </Select>
-              <Button variant="outline" size="sm" onClick={retryAnalysis}>
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Retry Analysis
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => retryAnalysis(model)}
+                disabled={isRetrying}
+              >
+                <RefreshCw className={"w-4 h-4 mr-2" + (isRetrying ? " animate-spin" : "")} />
+                {isRetrying ? "Retrying..." : "Retry Analysis"}
               </Button>
             </>
           )}

@@ -9,6 +9,8 @@ import Analysis from "@/pages/analysis/Analysis";
 import GuestRoute from "./GuestRoute";
 import NotFound from "@/pages/404/NotFound";
 import UploadDetailsPage from "@/pages/uploads/Uploads";
+import AdminRoute from "./AdminRoute";
+import UsersDashboard from "@/pages/users/UsersDashboard";
 
 export const routeNames = {
   HOME: "/dashboard",
@@ -16,6 +18,8 @@ export const routeNames = {
   ANALYSIS: "/analysis",
   LOGIN: "/login",
   UPLOADS: "/uploads/:id",
+  USERS: "/users",
+  USER: "/user"
 };
 
 export const router = createBrowserRouter([
@@ -49,6 +53,19 @@ export const router = createBrowserRouter([
               {
                 path: routeNames.UPLOADS,
                 element: <UploadDetailsPage />
+              },
+              {
+                element: <AdminRoute />,
+                children: [
+                  {
+                    path: routeNames.USERS,
+                    element: <UsersDashboard />
+                  },
+                  {
+                    path: routeNames.USER + "/:id",
+                    element: <HomePage />
+                  }
+                ]
               }
             ],
           },

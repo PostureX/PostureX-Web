@@ -9,10 +9,11 @@ import LiveWebcam from "./LiveWebcam"
 import VideoUpload from "./VideoUpload"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useMutation } from "@tanstack/react-query"
-import { useState } from "react"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useNavigate } from "react-router"
 
 export default function InferencePanel() {
+    const navigate = useNavigate()
     const {
         analysisMode,
         setAnalysisMode,
@@ -25,11 +26,11 @@ export default function InferencePanel() {
         setCameraIndex,
         fetchDevices,
         cameraError,
+        model,
+        setModel,
     } = useAnalysis()
 
     const { uploadedVideos, uploadVideos, uploads, setUploadedVideos, setUploads, setVideoUrls } = useUpload();
-
-    const [model, setModel] = useState("cx")
 
     // React Query mutation for upload
     const uploadMutation = useMutation({
@@ -41,12 +42,16 @@ export default function InferencePanel() {
                 model,
             })
         },
-        onSuccess: () => {
+        onSuccess: (res) => {
             // wait 1 second before resetting
             setTimeout(() => {
                 setUploadedVideos({});
                 setUploads([]);
                 setVideoUrls({});
+                console.log(res)
+                if (res && typeof res === "object" && "analysis_id" in res) {
+                    navigate(`/uploads/${res.analysis_id}`);
+                }
             }, 1000);
         }
     })
@@ -69,6 +74,18 @@ export default function InferencePanel() {
                         </CardTitle>
                         <div className="flex items-center gap-2">
                             <div className="flex items-center gap-2">
+                                <Select onValueChange={setModel} value={model}>
+                                    <SelectTrigger className="w-[180px]">
+                                        <SelectValue placeholder="Select a Model" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectGroup>
+                                            <SelectLabel>Models</SelectLabel>
+                                            <SelectItem value="cx">Cheng Xi's Model</SelectItem>
+                                            <SelectItem value="gy">Guan Yu's Model</SelectItem>
+                                        </SelectGroup>
+                                    </SelectContent>
+                                </Select>
                                 {analysisMode === "live" && isCameraOn && !cameraError ? (
                                     <Button
                                         variant={isAnalyzing ? "destructive" : "default"}
@@ -88,24 +105,10 @@ export default function InferencePanel() {
                                         )}
                                     </Button>
                                 ) : analysisMode === "upload" ? (
-                                    <>
-                                        <Select onValueChange={setModel} value={model}>
-                                            <SelectTrigger className="w-[180px]">
-                                                <SelectValue placeholder="Select a Model" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectGroup>
-                                                    <SelectLabel>Models</SelectLabel>
-                                                    <SelectItem value="cx">Cheng Xi's Model</SelectItem>
-                                                    <SelectItem value="gy">Guan Yu's Model</SelectItem>
-                                                </SelectGroup>
-                                            </SelectContent>
-                                        </Select>
-                                        <Button onClick={handleUpload} disabled={isUploading}>
-                                            <Upload />
-                                            {isUploading ? "Uploading..." : "Upload & Analyse"}
-                                        </Button>
-                                    </>
+                                    <Button onClick={handleUpload} disabled={isUploading}>
+                                        <Upload />
+                                        {isUploading ? "Uploading..." : "Upload & Analyse"}
+                                    </Button>
                                 ) : null}
                             </div>
                         </div>

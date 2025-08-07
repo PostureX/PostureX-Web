@@ -49,6 +49,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         removeCookie('authUser');
         removeCookie('authToken');
         queryClient.setQueryData(['authUser'], null);
+    
+        queryClient.clear();
+
+        // logout in API
+        await api.post("/auth/logout");
+
         navigate('/');
     };
 

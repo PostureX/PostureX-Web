@@ -9,6 +9,7 @@ import { saveAs } from "file-saver";
 import { useNavigate } from "react-router";
 import { routeNames } from "@/routes/routes";
 import { toast } from "sonner";
+import { useAuth } from "./AuthContext";
 
 interface UploadDetailContextType {
   deleteAnalysis: () => void;
@@ -30,8 +31,11 @@ interface UploadDetailContextType {
   currentFrame: FrameData | undefined;
   setCurrentFrame: (frame: FrameData) => void;
   aggregatedResults: Record<View, AggregatedResults> | undefined;
+  downloadRawData: () => void;
   downloadReport: () => void;
-  retryAnalysis: () => void;
+  isDownloadingReport: boolean;
+  downloadReportError: unknown;
+  retryAnalysis: (model: string) => void;
   isRetrying: boolean;
   retryError: unknown;
 }
@@ -41,24 +45,7 @@ const UploadDetailContext = createContext<UploadDetailContextType | undefined>(u
 export function UploadDetailProvider({ id, children }: { id: string; children: ReactNode }) {
   const navigate = useNavigate();
 
-  // React Query mutation for deleting analysis
-  const {
-    mutate: deleteAnalysis,
-    isPending: isDeleting,
-    error: deleteError,
-  } = useMutation({
-    mutationFn: async () => {
-      const res = await api.delete(`/analysis/${id}`);
-      return res.data;
-    },
-    onSuccess: () => {
-      navigate(routeNames.HOME);
-      toast.success("Analysis deleted successfully");
-    },
-    onError: () => {
-      toast.error("Failed to delete analysis, please try again.");
-    },
-  });
+  const { user } = useAuth();
   const [videoUrls, setVideoUrls] = useState<Record<View, string> | undefined>(undefined);
   const [analysis, setAnalysis] = useState<RawAnalysisDetailResponse | undefined>(undefined);
   const [analysisJsons, setAnalysisJsons] = useState<Record<View, AnalysisResult> | undefined>(undefined);
@@ -66,6 +53,29 @@ export function UploadDetailProvider({ id, children }: { id: string; children: R
   const [currentView, setCurrentView] = useState<View | undefined>(undefined);
   const [currentFrame, setCurrentFrame] = useState<FrameData | undefined>(undefined);
   const [aggregatedResults, setAggregatedResults] = useState<Record<View, AggregatedResults> | undefined>(undefined);
+
+  // React Query mutation for deleting analysis
+  const {
+    mutate: deleteAnalysis,
+    isPending: isDeleting,
+    error: deleteError,
+  } = useMutation({
+    mutationFn: async () => {
+      await api.delete(`/analysis/${id}`);
+    },
+    onSuccess: () => {
+      if (user?.is_admin) {
+        navigate(routeNames.USER + `/${analysis?.user_id}`);
+      } else {
+        navigate(routeNames.HOME);
+      }
+
+      toast.success("Analysis deleted successfully");
+    },
+    onError: () => {
+      toast.error("Failed to delete analysis, please try again.");
+    },
+  });
 
   const {
     data: analysisData,
@@ -88,19 +98,18 @@ export function UploadDetailProvider({ id, children }: { id: string; children: R
   useEffect(() => {
     if (analysisData) {
       setAnalysis(analysisData);
-
-      // set video urls
-      setVideoUrls(
-        Object.fromEntries(
-          Object.entries(analysisData.uploads)
-            .filter(([, url]) => typeof url === "string" && url !== undefined)
-        ) as Record<View, string>
-      );
-
-      // set current view
-      setCurrentView(Object.keys(analysisData.uploads)[0] as View);
+      // Only set video URLs once, not on every refetch
+      setCurrentView((prev) => prev ?? (Object.keys(analysisData.uploads)[0] as View));
+      if (!videoUrls) {
+        setVideoUrls(
+          Object.fromEntries(
+            Object.entries(analysisData.uploads)
+              .filter(([, url]) => typeof url === "string" && url !== undefined)
+          ) as Record<View, string>
+        );
+      }
     }
-  }, [analysisData]);
+  }, [analysisData, videoUrls]);
 
   // Fetch analysis_json_urls if present
   const angleUrls = analysis?.analysis_json_urls;
@@ -167,16 +176,20 @@ export function UploadDetailProvider({ id, children }: { id: string; children: R
     isPending: isRetrying,
     error: retryError,
   } = useMutation({
-    mutationFn: async (model) => {
+    mutationFn: async (model: string) => {
       const res = await api.post(`/analysis/retry/${id}`, { model });
       return res.data;
     },
     onSuccess: () => {
       refetch();
+    },
+    onError: (e) => {
+      console.log(e);
+      toast.error("Failed to retry analysis, please try again.");
     }
   });
 
-  const downloadReport = async (): Promise<void> => {
+  const downloadRawData = async (): Promise<void> => {
     const zip = new JSZip();
 
     // Add analysis JSON files
@@ -216,6 +229,31 @@ export function UploadDetailProvider({ id, children }: { id: string; children: R
     }
   };
 
+  // Mutation for downloading report
+  const {
+    mutate: downloadReport,
+    isPending: isDownloadingReport,
+    error: downloadReportError,
+  } = useMutation({
+    mutationFn: async () => {
+      const res = await api.get(`/analysis/report/${id}`);
+
+      const url = res.data.url;
+
+      // auto download the report
+      const link = document.createElement("a");
+      link.href = url;
+      link.toggleAttribute('download');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    },
+    onError: (e) => {
+      console.error("Error downloading report:", e);
+      toast.error("Failed to download report, please try again.");
+    }
+  });
+
   return (
     <UploadDetailContext.Provider value={{
       analysis,
@@ -234,13 +272,16 @@ export function UploadDetailProvider({ id, children }: { id: string; children: R
       currentFrame,
       setCurrentFrame,
       aggregatedResults,
-      downloadReport,
+      downloadRawData,
       retryAnalysis,
       isRetrying,
       retryError,
       deleteAnalysis,
       isDeleting,
-      deleteError
+      deleteError,
+      downloadReport,
+      isDownloadingReport,
+      downloadReportError
     }}>
       {children}
     </UploadDetailContext.Provider>

@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, type ReactNode, useEffect, useRef } from "react"
-import { Keypoint, PostureMetric } from "@/types/analysis"
+import { Keypoint, Measurements, PostureMetric } from "@/types/analysis"
 import { InferenceSettingsProvider } from "./InferenceSettingsContext"
 import api from "@/api/api"
 
@@ -10,6 +10,8 @@ type AnalysisMode = "live" | "upload"
 // PostureMetric imported from types
 
 interface AnalysisContextType {
+  measurements: Measurements;
+  setMeasurements: (v: Measurements) => void;
   isAnalyzing: boolean
   setIsAnalyzing: (v: boolean) => void
   currentScore: number
@@ -30,6 +32,8 @@ interface AnalysisContextType {
   fetchDevices: () => Promise<void>
   rawScores: number[] | null
   setRawScores: (v: number[] | null) => void
+  model: string
+  setModel: (v: string) => void
 }
 
 // Utility to parse both object and array posture_score formats
@@ -71,12 +75,11 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
   const [cameraDevices, setCameraDevices] = useState<MediaDeviceInfo[]>([])
   const [cameraIndex, setCameraIndex] = useState(0)
   const [cameraError, setCameraError] = useState(false)
-
   const [postureMetrics, setPostureMetrics] = useState<PostureMetric[]>([])
-
   const [keypoints, setKeypoints] = useState<Keypoint[]>([])
-
   const [rawScores, setRawScores] = useState<number[] | null>(null)
+  const [model, setModel] = useState("cx")
+  const [measurements, setMeasurements] = useState<import("@/types/analysis").Measurements>({});
 
   const wsRef = useRef<WebSocket | null>(null)
   const frameIntervalRef = useRef<number | null>(null)
@@ -103,8 +106,10 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
           const response = await api.get("/auth/ws-token");
           const token = response.data.ws_token;
 
+          const port = model == "cx" ? 8893 : 8894;
+
           // Open WebSocket connection with token as URL param
-          ws = new WebSocket(`ws://10.3.250.181:8893?token=${encodeURIComponent(token)}`);
+          ws = new WebSocket(`ws://10.3.250.181:${port}?token=${encodeURIComponent(token)}`);
           wsRef.current = ws;
 
           ws.onopen = () => {
@@ -139,11 +144,15 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
                 }));
                 setKeypoints(mappedKeypoints);
               }
+              if (data.measurements) {
+                setMeasurements(data.measurements);
+              }
+
               if (data.posture_score) {
                 setPostureMetrics(parsePostureScore(data.posture_score));
               }
-              if (data.raw_scores) {
-                setRawScores(data.raw_scores);
+              if (data.raw_scores_percent) {
+                setRawScores(data.raw_scores_percent);
               }
             } catch (e) {
               console.error("WebSocket message error:", e);
@@ -189,7 +198,7 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
         }
       };
     }
-  }, [isAnalyzing, analysisMode, isCameraOn])
+  }, [isAnalyzing, analysisMode, isCameraOn, model])
 
   return (
     <AnalysisContext.Provider
@@ -214,6 +223,10 @@ export function AnalysisProvider({ children }: { children: ReactNode }) {
         fetchDevices,
         rawScores,
         setRawScores,
+        model,
+        setModel,
+        measurements,
+        setMeasurements,
       }}
     >
       <InferenceSettingsProvider>{children}</InferenceSettingsProvider>

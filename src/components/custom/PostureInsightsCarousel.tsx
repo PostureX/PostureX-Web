@@ -2,16 +2,10 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import InsightsCard from "./InsightsCard/InsightsCard";
 import { GripHorizontal, ChevronLeft, ChevronRight } from "lucide-react";
-
-interface Insight {
-  type: "critical" | "warning" | "good" | "info";
-  title: string;
-  content: string;
-  change: string;
-}
+import { AnalysisSummaryInsight } from "@/hooks/useUserAnalyses";
 
 interface PostureInsightsCarouselProps {
-  insights: Insight[];
+  insights: AnalysisSummaryInsight[];
   className?: string;
 }
 
@@ -175,7 +169,6 @@ export default function PostureInsightsCarousel({ insights, className }: Posture
                 type={insight.type}
                 title={insight.title}
                 content={insight.content}
-                change={insight.change}
                 isDragging={isDragging}
               />
             </div>

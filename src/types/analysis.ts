@@ -88,3 +88,23 @@ export interface AnalysisResult {
   frames_data: FrameData[];
   aggregated_results: AggregatedResults;
 }
+
+export interface UploadData {
+  created_at: string;
+  id: number;
+  text: string;
+  user_id: number;
+  status?: string;
+  uploads: Record<View, string>;
+};
+
+export const measurementUnits: Record<MeasurementKey, string> = {
+  foot_to_shoulder_offset_left: "cm",
+  foot_to_shoulder_offset_right: "cm",
+  knee_angle: "°",
+  head_tilt: "°",
+  arm_angle: "°",
+  arm_bent_angle: "°",
+  leg_spread: "cm",
+  back_angle: "°",
+};

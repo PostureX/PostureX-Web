@@ -9,6 +9,8 @@ interface UploadCardProps {
   date: string;
   status?: string;
   onViewAnalysis?: () => void;
+  thumbnail?: string; // mp4 url
+  isReel?: boolean;
 }
 
 function getStatusBadge(status?: string) {
@@ -46,7 +48,7 @@ function getStatusBadge(status?: string) {
   }
 }
 
-export default function UploadCard({ id, date, status, onViewAnalysis }: UploadCardProps) {
+export default function UploadCard({ id, date, status, onViewAnalysis, thumbnail, isReel }: UploadCardProps) {
   const navigate = useNavigate();
 
   const isFailed = status === "failed";
@@ -56,7 +58,27 @@ export default function UploadCard({ id, date, status, onViewAnalysis }: UploadC
         {isFailed && (
           <AlertCircle className="w-10 h-10 text-destructive opacity-80" />
         )}
-        {/* You can add Image component here if needed */}
+        {/* Thumbnail rendering: always mp4 video, letterboxed, always boxed into 16:9 */}
+        {!isFailed && thumbnail && (
+          <div className={`w-full h-full bg-black flex items-center justify-center aspect-video ${isReel ? 'relative' : ''}`}>
+            <video
+              src={thumbnail}
+              className="object-contain w-full h-full rounded-md bg-black"
+              controls={false}
+              preload="metadata"
+              onLoadedMetadata={e => {
+                (e.target as HTMLVideoElement).currentTime = 0.1;
+                (e.target as HTMLVideoElement).pause();
+              }}
+            />
+            {isReel && (
+              <div className="absolute inset-0 pointer-events-none border-2 border-black" style={{ boxSizing: 'border-box' }} />
+            )}
+            {isReel && (
+              <span className="absolute top-2 right-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded">Reel</span>
+            )}
+          </div>
+        )}
       </div>
       <CardContent className="p-4">
         <div className="flex items-center gap-2 mb-2">
@@ -64,7 +86,7 @@ export default function UploadCard({ id, date, status, onViewAnalysis }: UploadC
           {getStatusBadge(status)}
         </div>
         <div className={`flex items-center text-sm mb-4 ${isFailed ? "text-destructive" : "text-muted-foreground"}`}>
-          <AlertCircle className="w-4 h-4 mr-1" />
+          <Clock className="w-4 h-4 mr-1" />
           <span>{date}</span>
         </div>
         {isFailed ? (
