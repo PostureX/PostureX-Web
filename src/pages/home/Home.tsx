@@ -278,63 +278,72 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* New Analysis Card */}
-            <button
-              onClick={() => navigate(routeNames.ANALYSIS)}
-              className="group w-full text-left"
-              style={{ minWidth: 0 }}
-            >
-              <Card className="overflow-hidden upload-container bg-muted border-dashed border-2 border-border hover:border-primary/50 transition-colors cursor-pointer h-full flex flex-col">
-                <CardContent className="p-4 flex flex-col flex-1 items-center justify-center">
-                  <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mb-4">
-                    <Plus className="w-8 h-8 text-primary-foreground" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-primary text-center">New Analysis</h3>
-                </CardContent>
-              </Card>
-            </button>
+            {/* New Analysis Card (hide if user is present) */}
+            {!id && (
+              <button
+                onClick={() => navigate(routeNames.ANALYSIS)}
+                className="group w-full text-left"
+                style={{ minWidth: 0 }}
+              >
+                <Card className="overflow-hidden upload-container bg-muted border-dashed border-2 border-border hover:border-primary/50 transition-colors cursor-pointer h-full flex flex-col">
+                  <CardContent className="p-4 flex flex-col flex-1 items-center justify-center">
+                    <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mb-4">
+                      <Plus className="w-8 h-8 text-primary-foreground" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-primary text-center">New Analysis</h3>
+                  </CardContent>
+                </Card>
+              </button>
+            )}
             {/* Conditional rendering based on react-query */}
             {uploadsLoading ? (
               <div className="loading-spinner text-foreground">Loading...</div>
             ) : uploadsError ? (
               <Card variant="noHighlight" className="col-span-1 md:col-span-2 lg:col-span-3 bg-destructive/10 border-destructive/30 border flex items-center justify-center h-64 shadow-sm">
-                <CardContent className="flex flex-col items-center justify-center">
-                  <AlertTriangle className="w-10 h-10 text-destructive mb-3" />
-                  <div className="text-lg font-semibold text-destructive mb-1">Failed to load uploads</div>
-                  <div className="text-sm text-destructive/80 mb-4">{uploadsError.message}</div>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => window.location.reload()}
-                  >
-                    Retry
-                  </Button>
-                </CardContent>
+              <CardContent className="flex flex-col items-center justify-center">
+                <AlertTriangle className="w-10 h-10 text-destructive mb-3" />
+                <div className="text-lg font-semibold text-destructive mb-1">Failed to load uploads</div>
+                <div className="text-sm text-destructive/80 mb-4">{uploadsError.message}</div>
+                <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => window.location.reload()}
+                >
+                Retry
+                </Button>
+              </CardContent>
               </Card>
             ) : (
-              filteredUploads &&
+              filteredUploads && filteredUploads.length > 0 ? (
               filteredUploads.map((upload: UploadData) => {
                 // Format date as 'MMM DD, YYYY, HH:mm'
                 const dateObj = new Date(upload.created_at);
                 const formattedDate = formatDate(dateObj);
                 return (
-                  <UploadCard
-                    key={upload.id}
-                    id={upload.id}
-                    date={formattedDate}
-                    status={upload.status}
-                    thumbnail={Object.entries(upload.uploads).length > 0 ? Object.values(upload.uploads)[0] : undefined}
-                    onViewAnalysis={
-                      upload.status === "failed"
-                        ? undefined
-                        : () => {
-                          // Handle view analysis action
-                          console.log(`View analysis for upload ${upload.id}`);
-                        }
+                <UploadCard
+                  key={upload.id}
+                  id={upload.id}
+                  date={formattedDate}
+                  status={upload.status}
+                  thumbnail={Object.entries(upload.uploads).length > 0 ? Object.values(upload.uploads)[0] : undefined}
+                  onViewAnalysis={
+                  upload.status === "failed"
+                    ? undefined
+                    : () => {
+                    // Handle view analysis action
+                    console.log(`View analysis for upload ${upload.id}`);
                     }
-                  />
+                  }
+                />
                 );
               })
+              ) : (
+              <Card variant="noHighlight" className="col-span-1 md:col-span-2 lg:col-span-3 bg-accent flex flex-col items-center justify-center h-64 text-muted-foreground">
+                <div className="text-2xl mb-2">{!id ? "No uploads found." : "User has no uploads."}</div>
+                {!id && <div className="text-sm">Try uploading a new analysis to get started.</div>}
+                
+              </Card>
+              )
             )}
           </div>
         </div>
